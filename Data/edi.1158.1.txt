@@ -1,0 +1,942 @@
+
+  
+    uid=EDI,o=EDI,dc=edirepository,dc=orgall
+      https://orcid.org/0000-0002-2250-0642
+      all
+    
+    
+      public
+      read
+    
+  
+  
+    doi:10.6073/pasta/581c8327d2fcda85595d9caa5bc12521Understanding the Influences of Forest Type, Cover Board Type and Weather on Salamanders 
+    
+      Henry Schwendler
+      Hiram College
+      Research Technician
+      Schwendlerjh@outlook.com
+      0000-0002-2250-0642 
+    
+    
+      Louis Oliphant
+      Hiram College
+      Associate Professor of Computer Science
+      oliphantlt@hiram.edu
+    
+    
+      Nicole Ryman
+      Geauga Park District
+    
+    
+      Andrew  Runyon
+      University of Illinois
+    
+    
+      Michael Benedict
+      Hiram College
+      benedictm@hiram.edu
+      Conservation Director and Interim Director of the James H. Barrow Field Station and Northwoods Field Station
+    
+    2022-07-11Salamanders are vital bioindicators that function to support a terrestrial forest
+      ecosystem. The continuous loss of amphibian species and their habitat can have profound
+      impacts on terrestrial systems. In terrestrial environments, salamanders use natural cover for
+      refuge, foraging, and maintaining moisture; however, artificial cover has commonly been used
+      to survey and conserve these species. The objective of this study was to assess terrestrial
+      salamander preference for natural versus artificial coverboards in relation to forest stands
+      in two successional stages located within the James H. Barrow Biological Field Station (Hiram,
+      Ohio). Ten artificial (particle board, 30 x 33 cm) and ten natural (white ash, 30 x 30 cm)
+      coverboards were placed in two 50 m parallel transects arranged 2 m apart within transitional
+      and mature forests. Surveys were conducted weekly between the second week of September and the
+      second week of November from 2018 to 2021. Average weakly precipitation and max temperature
+      were recorded. Both abundance and species richness were significantly higher under natural
+      coverboards and in the transitional forest. There were also correlation between species
+      richness and abundance with daily max temperature and weakly precipitation. 678 individuals
+      across five species were found: Eastern Red-Backed Salamander, Spotted Salamander, Four-Toed
+      Salamander, Red-Spotted Newt, and Northern Two-Lined Salamander. Eastern Red-Backed
+      Salamanders were the most abundant species within both mature and transitional forests.
+      Natural coverboards may be a better method to survey terrestrial salamanders because
+      artificial coverboards are comprised of wood chippings, wax and adhesives which may alter soil
+      permeability for less favorable conditions.
+    
+      Old Growth Forest
+      Urodela
+      Transitional forest
+      pelthodon 
+      Ambystoma
+      Artifical Coverbaord
+      Northeast Ohio
+    
+    This data package is released to the "public domain" under Creative Commons
+      CC0 1.0 "No Rights Reserved" (see: https://creativecommons.org/publicdomain/zero/1.0/). It is
+      considered professional etiquette to provide attribution of the original work if this data
+      package is shared in whole or by individual components. A generic citation is provided for
+      this data package on the website https://portal.edirepository.org (herein "website") in the
+      summary metadata page. Communication (and collaboration) with the creators of this data
+      package is recommended to prevent duplicate research or publication. This data package (and
+      its components) is made available "as is" and with no warranty of accuracy or fitness for use.
+      The creators of this data package and the website shall not be liable for any damages
+      resulting from misinterpretation or misuse of the data package or its components. Periodic
+      updates of this data package may be available from the website. Thank
+      you.
+    https://doi.org/10.6073/pasta/581c8327d2fcda85595d9caa5bc12521
+      
+        James H. Barrow Biological Field Station
+        
+          -81.124998
+          -81.117624
+          41.309528
+          41.300057
+        
+      
+      
+        
+          
+            2018
+          
+          
+            2021
+          
+        
+      
+      
+        All salamander were recorded to the species level.
+        
+          Order
+          Urodela
+          668181
+        
+      
+      
+        
+          Kingdom
+          Metazoa
+          metazoans
+          33208
+          
+            Phylum
+            Chordata
+            chordates
+            7711
+            
+              Subphylum
+              Craniata
+              89593
+              
+                Superclass
+                Sarcopterygii
+                8287
+                
+                  Class
+                  Amphibia
+                  amphibians
+                  8292
+                  
+                    Superorder
+                    Batrachia
+                    41666
+                    
+                      Order
+                      Caudata
+                      8293
+                      
+                        Superfamily
+                        Salamandroidea
+                        30367
+                        
+                          Family
+                          Plethodontidae
+                          lungless salamanders
+                          8332
+                          
+                            Subfamily
+                            Hemidactyliinae
+                            698026
+                            
+                              Genus
+                              Hemidactylium
+                              269187
+                              
+                                Species
+                                Hemidactylium scutatum
+                                four-toed salamander
+                                291265
+                              
+                            
+                          
+                        
+                      
+                    
+                  
+                
+              
+            
+          
+        
+      
+      
+        
+          Kingdom
+          Metazoa
+          metazoans
+          33208
+          
+            Phylum
+            Chordata
+            chordates
+            7711
+            
+              Subphylum
+              Craniata
+              89593
+              
+                Superclass
+                Sarcopterygii
+                8287
+                
+                  Class
+                  Amphibia
+                  amphibians
+                  8292
+                  
+                    Superorder
+                    Batrachia
+                    41666
+                    
+                      Order
+                      Caudata
+                      8293
+                      
+                        Superfamily
+                        Salamandroidea
+                        30367
+                        
+                          Family
+                          Plethodontidae
+                          lungless salamanders
+                          8332
+                          
+                            Subfamily
+                            Plethodontinae
+                            269181
+                            
+                              Genus
+                              Plethodon
+                              woodland salamanders
+                              8335
+                              
+                                Species
+                                Plethodon cinereus
+                                red-backed salamander
+                                141976
+                              
+                            
+                          
+                        
+                      
+                    
+                  
+                
+              
+            
+          
+        
+      
+      
+        
+          Kingdom
+          Metazoa
+          metazoans
+          33208
+          
+            Phylum
+            Chordata
+            chordates
+            7711
+            
+              Subphylum
+              Craniata
+              89593
+              
+                Superclass
+                Sarcopterygii
+                8287
+                
+                  Class
+                  Amphibia
+                  amphibians
+                  8292
+                  
+                    Superorder
+                    Batrachia
+                    41666
+                    
+                      Order
+                      Caudata
+                      8293
+                      
+                        Superfamily
+                        Salamandroidea
+                        30367
+                        
+                          Family
+                          Salamandridae
+                          newts
+                          8314
+                          
+                            Subfamily
+                            Pleurodelinae
+                            1331674
+                            
+                              Genus
+                              Notophthalmus
+                              8315
+                              
+                                Species
+                                Notophthalmus viridescens
+                                eastern newt
+                                8316
+                              
+                            
+                          
+                        
+                      
+                    
+                  
+                
+              
+            
+          
+        
+      
+      
+        
+          Kingdom
+          Metazoa
+          metazoans
+          33208
+          
+            Phylum
+            Chordata
+            chordates
+            7711
+            
+              Subphylum
+              Craniata
+              89593
+              
+                Superclass
+                Sarcopterygii
+                8287
+                
+                  Class
+                  Amphibia
+                  amphibians
+                  8292
+                  
+                    Superorder
+                    Batrachia
+                    41666
+                    
+                      Order
+                      Caudata
+                      8293
+                      
+                        Superfamily
+                        Salamandroidea
+                        30367
+                        
+                          Family
+                          Ambystomatidae
+                          mole salamanders
+                          8294
+                          
+                            Genus
+                            Ambystoma
+                            mole salamanders
+                            8295
+                            
+                              Species
+                              Ambystoma maculatum
+                              spotted salamander
+                              43114
+                            
+                          
+                        
+                      
+                    
+                  
+                
+              
+            
+          
+        
+      
+      
+        
+          Kingdom
+          Metazoa
+          metazoans
+          33208
+          
+            Phylum
+            Chordata
+            chordates
+            7711
+            
+              Subphylum
+              Craniata
+              89593
+              
+                Superclass
+                Sarcopterygii
+                8287
+                
+                  Class
+                  Amphibia
+                  amphibians
+                  8292
+                  
+                    Superorder
+                    Batrachia
+                    41666
+                    
+                      Order
+                      Caudata
+                      8293
+                      
+                        Superfamily
+                        Salamandroidea
+                        30367
+                        
+                          Family
+                          Plethodontidae
+                          lungless salamanders
+                          8332
+                          
+                            Subfamily
+                            Hemidactyliinae
+                            698026
+                            
+                              Genus
+                              Eurycea
+                              brook salamanders
+                              43043
+                              
+                                Species
+                                Eurycea bislineata
+                                two-lined salamander
+                                134758
+                              
+                            
+                          
+                        
+                      
+                    
+                  
+                
+              
+            
+          
+        
+      
+    
+    
+      The data will be maintenance when needed.
+      unknown
+    
+    
+      Henry Schwendler
+      Hiram College
+      Research Technician
+      Schwendlerjh@outlook.com
+      0000-0002-2250-0642 
+    
+    
+    Environmental Data Initiativeinfo@edirepository.orghttps://edirepository.org0330j0z60Environmental Data Initiative
+      
+        Salamander Survey Methods - Each site contains ten artificial made (particle
+          board, 30 x 33 cm) coverboards paired off with ten natural (white ash, ~30 x 30 cm)
+          coverboards. The artificial coverboards are 2 cm thick and the natural coverboards range
+          from 2-5 cm in thickness. We placed boards in the forest in July 2018, one board of each
+          treatment at a 2 m apart and separating each pair by 5 m along a 50 m transect. We
+          randomly assigned the order of artificial or natural coverboards for each pair. In 2018,
+          2019, 2020, and 2021, sampling took place between the second week of September and the
+          second week of November, occurring once per week between 1200 hr and 1500 hr. All
+          measurements were recorded during calm wind (0-12 kmh) and above freezing temperature
+          (0°C-30°C). During each sampling session, we flipped the coverboards and recorded
+          salamander species and snout-vent length. When recording snout to vent length, salamanders
+          were placed in a quart sized plastic clear bag with water to minimize skin damage and
+          distress. Once the salamanders were recorded, they would be placed back under the
+          coverboard where they were found.
+      
+    
+    
+      Forest maturity and coverboard type influence on salamander habitat preference
+      
+        Henry Schwnedler
+        Hiram College
+        Research Technician
+        schwendlerjh@outlook.com
+        0000-0002-2250-0642
+        Lead Author
+      
+    
+    
+      cleaned_salamander_data
+      cleaned_salamander_data.csv contains measurements from salamanders found from weekly sampling of cover boards in the James H. Barrow Field Station during the Fall 12-week session session from 2018 to 2021.  Precipitation and Temperature data was added after-the-fact by downloading daily summary weather data from NOAA Climate Data Online Search (https://www.ncdc.noaa.gov/cdo-web/search) for the station id "USC00333780" in Hiram, OH, which is within 2 miles of the field station.  The Weekly Precipitation was calculated by adding the daily precipitations for the day when sampling occurred plus the 6 days prior.
+      
+        cleaned_salamander_data.csv
+        136229
+        e116e6c06cf8181bf6575b3f439ef3fb
+        
+          
+            1
+            \n
+            column
+            
+              ,
+              "
+            
+          
+        
+        
+          
+            https://pasta.lternet.edu/package/data/eml/edi/1158/1/aa50987a40f58c3dc9faf9e63818be4e
+          
+        
+      
+      
+        
+          Week of Year
+          Week of Year
+          Week of year sampleing occured
+          float
+          
+            
+              
+                Week of Year
+              
+              
+                integer
+              
+            
+          
+        
+        
+          Date
+          Date
+          The date data waas recorded
+          dateTime
+          
+            
+              YYYY-MM-DD
+              
+            
+          
+        
+        
+          Board Number
+          Board Number
+          The label for each coverboard in the sample sites
+          float
+          
+            
+              
+                Board Number
+              
+              
+                integer
+              
+            
+          
+        
+        
+          Site Type
+          Site Type
+          The different forest types we sampled in: Mture forest and Transistional Forest
+          string
+          
+            
+              
+                
+                  
+                    Mature Forest
+                    A beech-maple mature forest which we sampled in
+                  
+                  
+                    Transitional Forest
+                    A 70 yr forest which we sampled in
+                  
+                
+              
+            
+          
+        
+        
+          Board Type
+          Board Type
+          The type of coverbaod used: Natural and Artifical
+          string
+          
+            
+              
+                
+                  
+                    Artificial
+                    A coverbaord made from partical baord
+                  
+                  
+                    Natural
+                    a coverbaord cut from an ash tree
+                  
+                
+              
+            
+          
+        
+        
+          Species
+          Species
+          The different spcies of salamanders recorded under the coverboards
+          string
+          
+            
+              
+                
+                  
+                    nan
+                    No salamander found
+                  
+                  
+                    FT
+                    Four Toed Salamander
+                  
+                  
+                    RB
+                    Eastern Red Backed Salamander
+                  
+                  
+                    RSN
+                    Eastern Red Spotted Newt
+                  
+                  
+                    SS
+                    Spotted Salamander
+                  
+                  
+                    TL
+                    Northern Two Lined Salamander
+                  
+                
+              
+            
+          
+          
+            NA
+            No salamander found
+          
+        
+        
+          Count
+          Count
+          The ammount of salamnders found
+          string
+          
+            
+              
+                
+                  
+                    0
+                    0
+                  
+                  
+                    1
+                    1
+                  
+                
+              
+            
+          
+        
+        
+          Daily Precipitation
+          Daily Precipitation
+          The amount of percipatation on a given day
+          float
+          
+            
+              
+                centimeter
+              
+              
+                real
+              
+            
+          
+        
+        
+          Weekly Precipitation
+          Weekly Precipitation
+          The average precipataion on a given day
+          float
+          
+            
+              
+                centimeter
+              
+              
+                real
+              
+            
+          
+        
+        
+          Maximum Temperature
+          Maximum Temperature
+          The maximum tempature on a given day
+          float
+          
+            
+              
+                celsius
+              
+              
+                real
+              
+            
+          
+        
+      
+      no
+      1734
+    
+    
+      salamander_richness_abundance
+      salamander_richness_abundance.csv contains summaries for each board on each day of sampling indicating the richness (number of unique species) and abundance (number of salamanders) for that board on that day.
+      
+        salamander_richness_abundance.csv
+        119421
+        a3227685eb93e0a5bcbd5ee87b821e76
+        
+          
+            1
+            \n
+            column
+            
+              ,
+              "
+            
+          
+        
+        
+          
+            https://pasta.lternet.edu/package/data/eml/edi/1158/1/4726c794561560da4725b71f48f8da50
+          
+        
+      
+      
+        
+          Week of Year
+          Week of Year
+          Week of year sampleing occured
+          float
+          
+            
+              
+                Week of Year
+              
+              
+                integer
+              
+            
+          
+        
+        
+          Date
+          Date
+          The date data was recorded
+          dateTime
+          
+            
+              YYYY-MM-DD
+              
+            
+          
+        
+        
+          Board Number
+          Board Number
+          The label for each board in the sample sites
+          float
+          
+            
+              
+                Board Number
+              
+              
+                integer
+              
+            
+          
+        
+        
+          Abundance
+          Abundance
+          The ammount of salamnders found
+          float
+          
+            
+              
+                Abundance
+              
+              
+                integer
+              
+            
+          
+        
+        
+          Richness
+          Richness
+          The different species of salamanders recorded under the coverboards
+          string
+          
+            
+              
+                
+                  
+                    0
+                    0
+                  
+                  
+                    1
+                    1
+                  
+                  
+                    2
+                    2
+                  
+                
+              
+            
+          
+        
+        
+          Site Type
+          Site Type
+          The different forest types we sampled in: Mature forest and Transistional Forest
+          string
+          
+            
+              
+                
+                  
+                    Mature Forest
+                    The beech-maple oldgrowth forest we sampled in
+                  
+                  
+                    Transitional Forest
+                    the 70 yr forest we sampled in
+                  
+                
+              
+            
+          
+        
+        
+          Board Type
+          Board Type
+          The type of coverbaod used: Natural and Artifical
+          string
+          
+            
+              
+                
+                  
+                    Artificial
+                    The coverboards that were made from partical board
+                  
+                  
+                    Natural
+                    the coverbaords that were cut from an ash tree
+                  
+                
+              
+            
+          
+        
+        
+          Daily Precipitation
+          Daily Precipitation
+          The amount of percipatation on a given day
+          float
+          
+            
+              
+                centimeter
+              
+              
+                real
+              
+            
+          
+        
+        
+          Maximum Temperature
+          Maximum Temperature
+          The maximum tempature on a given day
+          float
+          
+            
+              
+                celsius
+              
+              
+                real
+              
+            
+          
+        
+        
+          Weekly Precipitation
+          Weekly Precipitation
+          The amount of percipatation in a week
+          float
+          
+            
+              
+                centimeter
+              
+              
+                real
+              
+            
+          
+        
+      
+      no
+      1560
+    
+  
+  
+    
+      
+        
+          The week of year that sampling occurred. 1 - 52
+        
+        
+          The label for each board. 1 - 40
+        
+        
+          The numerical value of how many salamanders found under a coverboard
+          
+        
+      
+    
+  
+  
+    
+      
+    
+  

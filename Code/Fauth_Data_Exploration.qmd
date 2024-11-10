@@ -1,0 +1,52 @@
+---
+title: "Data Exploration"
+author: "Aidan Fauth"
+format: html
+editor: visual
+---
+
+## Set Up
+
+```{r}
+rm(list=ls())
+library(tidyverse)
+library(here)
+library(ggfortify)
+```
+
+## Load in the datasets
+
+```{r}
+scount <- read.csv(here("Data", "Fauth_cleaned_salamander_data.csv")) # the first csv with the counts data
+sabund <- read.csv(here("Data", "Fauth_salamander_richness_abundance.csv")) # file with the abundace data
+```
+
+Now, let's take a look at each of the data frames:
+
+Start with scount:
+
+```{r}
+glimpse(scount)
+```
+
+In this data frame we have 1,734 rows of data with 10 variables. 
+There are 5 numeric variables, 4 should be factors (the Count variable is a binary variable coded as 1s and 0s) and the Date should be changed to a date datatype.
+
+
+sabund:
+
+We expect to see a similar structure just with two variables changed (per the metadata file)
+
+```{r}
+glimpse(sabund)
+```
+
+This data frame has 1,560 entries (rows) and 10 variables (with Species and Count switched for Abundance and Richness.) 
+There are 7 numeric variables, 2 variables should be factors, and there is the same date variable that needs to be converted to date data type.
+
+Note: The total number of entries in each dataset are not the same, and therefore, I cannot merge the two files into one (which would greatly simplify my eventual analysis.)
+
+
+
+
+

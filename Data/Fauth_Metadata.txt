@@ -1,0 +1,94 @@
+Author: Aidan Fauth
+Date: 10/24/2024
+
+This is my metadata file for my capstone data analysis project for my biostatistics class. I intend to use these data in analysis that I will present to my class.
+
+These data are from a public repository called the Environmental Data Initiative.
+
+Web address: https://portal.edirepository.org/nis/mapbrowse?packageid=edi.1158.1
+
+Citation (included in data repository): 
+
+Schwendler, H., L. Oliphant, N. Ryman, and A. Runyon. 2022. Understanding the Influences of Forest Type, Cover Board Type and Weather on Salamanders ver 1. Environmental Data Initiative. https://doi.org/10.6073/pasta/581c8327d2fcda85595d9caa5bc12521 (Accessed 2024-10-22).
+
+To my knowledge these data have not be published as part of journal article.
+
+
+This metadata file covers two data files:
+
+The original data files: 
+
+1) cleaned_salamander_data.csv 
+
+2) salamander_richness_abundace.csv
+
+And their own metadata file: edi.1158.1.txt
+
+
+My altered version of the data sets are:
+
+1) Fauth_cleaned_salamander_data.csv 
+
+2) Fauth_salamander_richness_abundace.csv
+
+
+Description:
+
+These data were collected between the second week of September and second week of November of 2018 through 2021. They were collected at Barrow Biological Field Station in Hiram, Ohio by Schwendler, Oliphant, Ryman, and Runyon. The purpose of these data were to understand the effect of evironmental conditions, forest type (mature or transitional), and cover board type (artificial or natural) on salamander abundance, species, and species richess. Cover boards have been used both as a conservation strategy and a surveying method, so the authors wanted to see if the type of cover board made an effect on occupancy, especially if this interacted with forest type. 
+
+
+Changes: 
+
+I did not change any of the original data, but some of the variable names had spaces, so I replaced the spaces with "_".
+
+I included info from both data sets in one metadata file because a lot of the data is the same in both data sets (they are connected.)
+
+
+Variables in Fauth_cleaned_salamander_data.csv:
+
+Week_of_Year: integer -- number of the week out of 52 weeks in the year
+
+Date: date of data collection in the format: mm/dd/yy
+
+Board_Number: integer of the cover board number
+
+Site_Type: forest stand type -- either Mature Forest or Transitional Forest
+
+Board_Type: cover board type -- either Natural or Artificial
+
+Species: Species of salamander if there was one found under the board.
+
+	NA: no salamander found
+
+	RB: Eastern Red Backed Salamander
+
+	RSN: Eastern Red Spotted Newt
+
+	FT: Four Toed Salamander
+
+	SS: Spotted Salamander
+
+	TL: Northern Two Lined Salamander
+
+Count: 1 if a salamander was found (on that day under a particular board) or 0 if none were found. (Note: their metadata said the count was the number of salamanders found under the board but the data were different from the abundance data and clearly a binary occupancy variable)
+
+Daily_Precipitation: amount of precipitation on that given day.
+
+Weekly_Precipitation: average amount of precipation for that week.
+
+Maximum_Temperature: maximum temperature recorded that day.
+
+
+Variables in Fauth_salamander_richness_abundance:
+
+Note: This data file has almost all the same exact data included as the previous. The following variables are the same as the data file outlined above (including the values entered): Week_of_Year, Date, Board_Number, Site_Type, Daily_Precipitaion, Maximum_Temperature, and Weekly_Precipitation.
+
+Instead of Species and Count:
+
+Abundance: Amount of salamanders found.
+
+Richness: The number of different species found.
+
+
+
+
