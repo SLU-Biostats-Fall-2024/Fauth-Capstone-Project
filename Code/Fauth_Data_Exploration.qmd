@@ -4,6 +4,12 @@ author: "Aidan Fauth"
 format: html
 editor: visual
 ---
+This file explores the data in Fauth_cleaned_salamander_data.csv and Fauth_salamander_richness_abundance.csv for future analysis.
+
+Through this process I will identify and address any errors or outliers in each data set. 
+I will make any necessary structural changes to the data files so they are ready for analysis.
+Also, I will explore potential relationships that will inform me on what to expect from the results of my analyses.
+
 
 ## Set Up
 
@@ -30,7 +36,7 @@ glimpse(scount)
 ```
 
 In this data frame we have 1,734 rows of data with 10 variables. 
-There are 5 numeric variables, 4 should be factors (the Count variable is a binary variable coded as 1s and 0s) and the Date should be changed to a date datatype.
+There are 5 numeric variables, 3 should be factors, the Count variable is a binary variable coded as 1s and 0s (which is fine the way it is), and the Date should be changed to a date datatype.
 
 
 sabund:
@@ -47,6 +53,382 @@ There are 7 numeric variables, 2 variables should be factors, and there is the s
 Note: The total number of entries in each dataset are not the same, and therefore, I cannot merge the two files into one (which would greatly simplify my eventual analysis.)
 
 
+## Examining Potential Errors and Assigning correct datatypes:
+
+This section will prepare both datasets for analysis. 
 
 
+## 1. Converting Variables into Factors
+
+Both assign the correct datatype to the categorical variables and identify any errors. For each 'chr' variable, the code will save the variable as a factor and `levels()` will show the different groups (which will also identify any errors)
+
+a. Start with scount:
+
+Site_Type
+
+```{r}
+scount$Site_Type <- as.factor(scount$Site_Type)
+levels(scount$Site_Type)
+```
+
+No errors -- on the next variable.
+
+Board_Type
+
+```{r}
+scount$Board_Type <- as.factor(scount$Board_Type)
+levels(scount$Board_Type)
+```
+
+No errors.
+
+Species
+
+```{r}
+scount$Species <- as.factor(scount$Species)
+levels(scount$Species)
+```
+
+Looks good.
+
+
+b. Next abund:
+
+Site_Type
+
+```{r}
+sabund$Site_Type <- as.factor(sabund$Site_Type)
+levels(sabund$Site_Type)
+```
+
+No errors.
+
+Board_Type
+
+```{r}
+sabund$Board_Type <- as.factor(sabund$Board_Type)
+levels(sabund$Board_Type)
+```
+
+No errors.
+
+
+## 2. Deal with the Date variable:
+
+I need to convert the Date variable into a data object so that I can extract the year to use as a potential predictor.
+
+For scount:
+
+Change Date data type to date object
+
+```{r}
+scount$Date <- mdy(scount$Date) # parses dates with the format mm/dd/yyyy
+```
+
+Save a new variable as Year:
+
+```{r}
+scount$Year <- year(scount$Date) # extracts year component of the date object
+View(scount$Year)
+```
+
+
+Do the same thing for sabund:
+
+Change Date data type to date object
+
+```{r}
+sabund$Date <- mdy(sabund$Date) # parses dates with the format mm/dd/yyyy
+```
+
+Save a new variable as Year:
+
+```{r}
+sabund$Year <- year(sabund$Date) # extracts year component of the date object
+View(sabund$Year)
+```
+
+
+## 3. Examine the numeric variables
+
+Use histograms to examine if there are any outliers
+
+##First with scount:
+
+Week_of_Year:
+
+```{r}
+ggplot(scount,aes(Week_of_Year))+
+  geom_histogram()+
+  theme_bw()
+```
+
+Range of values looks reasonable (36 to 46)
+
+Board_Number:
+
+```{r}
+ggplot(scount,aes(Board_Number))+
+  geom_histogram()+
+  theme_bw()
+```
+
+Range looks reasonable
+
+Daily_Precipitation:
+
+```{r}
+ggplot(scount,aes(Daily_Precipitation))+
+  geom_histogram()+
+  theme_bw()
+```
+
+These data look reasonable as there are no values so extreme that they seem to be erroneous (rather than natural variation.)
+
+Weekly_Precipitation:
+
+```{r}
+ggplot(scount,aes(Weekly_Precipitation))+
+  geom_histogram()+
+  theme_bw()
+```
+
+These data look reasonable as there are no values so extreme that they seem to be erroneous (rather than natural variation.) Also, based on the range of values for daily, these values are within the range of possibility (should be sums of 7 daily measures.)
+
+Maximum_Temperature:
+
+```{r}
+ggplot(scount,aes(Maximum_Temperature))+
+  geom_histogram()+
+  theme_bw()
+```
+
+These data look reasonable.
+
+We can also now check the newly created Year variable:
+
+```{r}
+ggplot(scount,aes(Year))+
+  geom_histogram()+
+  theme_bw()
+```
+
+Looks good.
+
+
+## sabund:
+
+Week_of_Year:
+
+```{r}
+ggplot(sabund,aes(Week_of_Year))+
+  geom_histogram()+
+  theme_bw()
+```
+
+Range of values looks reasonable (36 to 46)
+
+Board_Number:
+
+```{r}
+ggplot(scount,aes(Board_Number))+
+  geom_histogram()+
+  theme_bw()
+```
+
+Range looks reasonable
+
+Abundance:
+
+```{r}
+ggplot(sabund,aes(Abundance))+
+  geom_histogram()+
+  theme_bw()
+```
+Makes sense.
+
+Richness:
+
+Should not see more than 5 because there are only 5 species
+
+```{r}
+ggplot(sabund,aes(Richness))+
+  geom_histogram()+
+  theme_bw()
+```
+
+Looks reasonable.
+
+Daily_Precipitation:
+
+```{r}
+ggplot(scount,aes(Daily_Precipitation))+
+  geom_histogram()+
+  theme_bw()
+```
+
+These data look reasonable as there are no values so extreme that they seem to be erroneous (rather than natural variation.)
+
+Weekly_Precipitation:
+
+```{r}
+ggplot(scount,aes(Weekly_Precipitation))+
+  geom_histogram()+
+  theme_bw()
+```
+
+These data look reasonable as there are no values so extreme that they seem to be erroneous (rather than natural variation.) Also, based on the range of values for daily, these values are within the range of possibility (should be sums of 7 daily measures.)
+
+Maximum_Temperature:
+
+```{r}
+ggplot(scount,aes(Maximum_Temperature))+
+  geom_histogram()+
+  theme_bw()
+```
+
+These data look reasonable.
+
+We can also now check the newly created Year variable:
+
+```{r}
+ggplot(scount,aes(Year))+
+  geom_histogram()+
+  theme_bw()
+```
+
+Looks good.
+
+## Saving the output:
+
+With no errors, outliers, and with a Year variable in each data frame, we can save these updated datasets.
+
+scount:
+
+```{r}
+write.csv(scount, here("Data", "Fauth_updated_salamander_count.csv")) 
+# places my output into my data folder for the project
+```
+
+sabund:
+
+```{r}
+write.csv(sabund, here("Data", "Fauth_updated_salamander_abundance.csv")) 
+# places my output into my data folder for the project
+```
+
+
+## Examine some potential relationships: 
+
+The response variables that I am interested in are Count, Abundance, and Site_Type.
+
+For Count and Abundance I want to use multiple regression (logistic in the case of Count), so I will be testing to see which combination of the available predictors create the best model.
+
+While exploring the data, I cannot test every relationship between Count/Abundance and the possible predictors, but I can explore the effects of the predictors that I expect to be the strongest.
+
+As for Site_Type, I want to get an understanding of the salamander communities in each forest type (transitional or mature), so I will explore that specific relationship here.
+
+
+## Count and Daily Precipitation
+
+Since Count is the response, I need to use a scatterplot, like I would for a normal regression to examine this relationship.
+
+```{r}
+ggplot(scount, aes(Daily_Precipitation, Count))+
+  geom_point(color = "blue", size = 3, position = position_jitter())+ # jitter the points as there will be a lot of overlap
+  theme_bw()
+```
+
+Here we see that there looks like there is no relationship. If occupancy related to daily precipitation, we would see a pattern in the data that would resemble an 's.' For instance, if more daily precipitation results more salamander occupancy, then the majority of the data points on lower end of the precipitation scale would be on the zero line and the higher. There is possibly a weak version of that relationship here but it is hard to see.
+
+Another way of visualizing this relationship is to flip the response and predictor and look at a boxplot:
+
+```{r}
+ggplot(scount, aes(factor(Count), Daily_Precipitation))+ ## used the factor() func. to have R treat the 0 and 1 as a separate category
+  geom_boxplot(outlier.color = "red")+
+  theme_bw()
+```
+
+Again, there doesn't seem to be a strong difference, mostly because 0 is much more common than any other entry. However, we can see that the means are different, with the middle of the 0 box being around 0.4 and the 1 box is around 0.9. There are outliers in the 0 distribution, but these are values that are reasonable with natural variation.
+
+
+## Count and Maximum_Temperature:
+
+Same as before, for logistic regression, using a scatterplot is our first step to see a relationship.
+
+```{r}
+ggplot(scount, aes(Maximum_Temperature,Count))+
+  geom_point(color = "blue", size = 3, position = position_jitter())+ # jitter the points as there will be a lot of overlap
+  theme_bw()
+```
+
+Here we can see a little more of a relationship, where the points are more sparse in the top left corner, showing most of data point that had a relatively low max temperature did not result in a salamander.
+
+Let's look at the relationship reversed in a boxplot:
+
+```{r}
+ggplot(scount, aes(factor(Count), Maximum_Temperature))+ ## used the factor() func. to have R treat the 0 and 1 as separate categories
+  geom_boxplot(outlier.color = "red")+
+  theme_bw()
+```
+
+Here we see different means (but hard to say if they are significant because of the large spread on each.) The mean max_temperature when salamaders were found is around 22 and when they were not found its about 17.5.
+
+Perhaps, max temperature will be a better predictor than daily precip. as the isolated relationship seems to be stronger. However, it is harder to say which is more likely to be in the model because the variation explained by one or both of these variables might also be explained by other variables (multicollinearity)
+
+Lets look at some different variables for the abundace data (as the relationships will be similar to Count) to 'cover more of our bases'
+
+## Abundance and Weekly_Precipitation:
+
+As the response is now numeric, a scatter plot is the clear choice.
+
+First let's look at the average and sd of abundance to get an idea of what it looks like:
+
+```{r}
+mean(sabund$Abundance)
+sd(sabund$Abundance)
+```
+
+The mean is between 0 and 1 meaning that more than one salamnder is relatively uncommon (and the most likely result is 0), but the spead is almost double the mean, which is a pretty large spread.
+
+```{r}
+ggplot(sabund, aes(Weekly_Precipitation,Abundance))+
+  geom_point(color = "blue", size = 3)+
+  theme_bw()
+```
+
+Perhaps a weak relationship because the majority of the lower precipitation numbers have lower abundance, but it is hard to see a clear slope.
+
+
+## Abundance and Board_Type
+
+In my multiple regression, I will also use categorical predictors (in this case binary). So, for this specific relationship, I will use a boxplot to examine the distribution.
+
+```{r}
+ggplot(sabund, aes(Board_Type, Abundance))+ 
+  geom_boxplot(outlier.color = "red")+
+  theme_bw()
+```
+
+The distributions are essentially identical. I expect that board type will not be a strong predictor of salamander abundace.
+
+## Site_Type and Species
+
+Here we have two categorical variables, so the best plot is a bar graph.
+
+First we need count data to make the plot. Use the sum of the Count variable to get an actual total for each group:
+
+```{r}
+fs_count <- scount |> group_by(Site_Type,Species) |> summarise(total = sum(Count))
+head(fs_count,12)
+```
+
+Clearly the red backs are way more common.
+
+```{r}
+ggplot(fs_count, aes(x = Site_Type, y = total, fill = Species))+
+     geom_bar(stat = "identity", position = "dodge")
+```
+
+Again, the red backed salamander is the most common, and there were more found in the transitional forest. That is true of the other species as well, but there numbers are so small its hard to see a clear difference, other than the spotted salamander (a clear preference for the transitional forest as well.)
 
