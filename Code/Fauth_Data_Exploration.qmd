@@ -4,12 +4,10 @@ author: "Aidan Fauth"
 format: html
 editor: visual
 ---
+
 This file explores the data in Fauth_cleaned_salamander_data.csv and Fauth_salamander_richness_abundance.csv for future analysis.
 
-Through this process I will identify and address any errors or outliers in each data set. 
-I will make any necessary structural changes to the data files so they are ready for analysis.
-Also, I will explore potential relationships that will inform me on what to expect from the results of my analyses.
-
+Through this process I will identify and address any errors or outliers in each data set. I will make any necessary structural changes to the data files so they are ready for analysis. Also, I will explore potential relationships that will inform me on what to expect from the results of my analyses.
 
 ## Set Up
 
@@ -35,9 +33,7 @@ Start with scount:
 glimpse(scount)
 ```
 
-In this data frame we have 1,734 rows of data with 10 variables. 
-There are 5 numeric variables, 3 should be factors, the Count variable is a binary variable coded as 1s and 0s (which is fine the way it is), and the Date should be changed to a date datatype.
-
+In this data frame we have 1,734 rows of data with 10 variables. There are 5 numeric variables, 3 should be factors, the Count variable is a binary variable coded as 1s and 0s (which is fine the way it is), and the Date should be changed to a date datatype.
 
 sabund:
 
@@ -47,22 +43,19 @@ We expect to see a similar structure just with two variables changed (per the me
 glimpse(sabund)
 ```
 
-This data frame has 1,560 entries (rows) and 10 variables (with Species and Count switched for Abundance and Richness.) 
-There are 7 numeric variables, 2 variables should be factors, and there is the same date variable that needs to be converted to date data type.
+This data frame has 1,560 entries (rows) and 10 variables (with Species and Count switched for Abundance and Richness.) There are 7 numeric variables, 2 variables should be factors, and there is the same date variable that needs to be converted to date data type.
 
 Note: The total number of entries in each dataset are not the same, and therefore, I cannot merge the two files into one (which would greatly simplify my eventual analysis.)
 
-
 ## Examining Potential Errors and Assigning correct datatypes:
 
-This section will prepare both datasets for analysis. 
-
+This section will prepare both datasets for analysis.
 
 ## 1. Converting Variables into Factors
 
 Both assign the correct datatype to the categorical variables and identify any errors. For each 'chr' variable, the code will save the variable as a factor and `levels()` will show the different groups (which will also identify any errors)
 
-a. Start with scount:
+a.  Start with scount:
 
 Site_Type
 
@@ -91,8 +84,7 @@ levels(scount$Species)
 
 Looks good.
 
-
-b. Next abund:
+b.  Next abund:
 
 Site_Type
 
@@ -111,7 +103,6 @@ levels(sabund$Board_Type)
 ```
 
 No errors.
-
 
 ## 2. Deal with the Date variable:
 
@@ -132,7 +123,6 @@ scount$Year <- year(scount$Date) # extracts year component of the date object
 View(scount$Year)
 ```
 
-
 Do the same thing for sabund:
 
 Change Date data type to date object
@@ -147,7 +137,6 @@ Save a new variable as Year:
 sabund$Year <- year(sabund$Date) # extracts year component of the date object
 View(sabund$Year)
 ```
-
 
 ## 3. Examine the numeric variables
 
@@ -215,7 +204,6 @@ ggplot(scount,aes(Year))+
 
 Looks good.
 
-
 ## sabund:
 
 Week_of_Year:
@@ -245,6 +233,7 @@ ggplot(sabund,aes(Abundance))+
   geom_histogram()+
   theme_bw()
 ```
+
 Makes sense.
 
 Richness:
@@ -317,8 +306,7 @@ write.csv(sabund, here("Data", "Fauth_updated_salamander_abundance.csv"))
 # places my output into my data folder for the project
 ```
 
-
-## Examine some potential relationships: 
+## Examine some potential relationships:
 
 The response variables that I am interested in are Count, Abundance, and Site_Type.
 
@@ -327,7 +315,6 @@ For Count and Abundance I want to use multiple regression (logistic in the case 
 While exploring the data, I cannot test every relationship between Count/Abundance and the possible predictors, but I can explore the effects of the predictors that I expect to be the strongest.
 
 As for Site_Type, I want to get an understanding of the salamander communities in each forest type (transitional or mature), so I will explore that specific relationship here.
-
 
 ## Count and Daily Precipitation
 
@@ -350,7 +337,6 @@ ggplot(scount, aes(factor(Count), Daily_Precipitation))+ ## used the factor() fu
 ```
 
 Again, there doesn't seem to be a strong difference, mostly because 0 is much more common than any other entry. However, we can see that the means are different, with the middle of the 0 box being around 0.4 and the 1 box is around 0.9. There are outliers in the 0 distribution, but these are values that are reasonable with natural variation.
-
 
 ## Count and Maximum_Temperature:
 
@@ -399,7 +385,6 @@ ggplot(sabund, aes(Weekly_Precipitation,Abundance))+
 
 Perhaps a weak relationship because the majority of the lower precipitation numbers have lower abundance, but it is hard to see a clear slope.
 
-
 ## Abundance and Board_Type
 
 In my multiple regression, I will also use categorical predictors (in this case binary). So, for this specific relationship, I will use a boxplot to examine the distribution.
@@ -431,4 +416,3 @@ ggplot(fs_count, aes(x = Site_Type, y = total, fill = Species))+
 ```
 
 Again, the red backed salamander is the most common, and there were more found in the transitional forest. That is true of the other species as well, but there numbers are so small its hard to see a clear difference, other than the spotted salamander (a clear preference for the transitional forest as well.)
-

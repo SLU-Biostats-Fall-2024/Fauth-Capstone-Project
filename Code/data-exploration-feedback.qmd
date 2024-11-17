@@ -1,0 +1,17 @@
+---
+title: "data-exploration-feedback"
+format: html
+editor: visual
+---
+
+## Data Exploration Feedback
+
+1.  Line 48 - you can probably do a full_join to join these 2 dataframes together for later analysis. We can look at that together in class and make sure it is giving us what we want. The syntax is like this:
+
+```{r}
+test_df <- full_join(scount, sabund)
+```
+
+2.  Line 289 - "Looks good." I agree! You did a nice thorough job going over these data and I especially like that you made some predictions (example line 241 about richness) that show me that you were thinking about your data. Excellent!
+
+Well done.
