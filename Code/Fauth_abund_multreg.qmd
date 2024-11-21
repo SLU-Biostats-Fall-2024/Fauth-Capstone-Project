@@ -1,0 +1,91 @@
+---
+title: "Preliminary Analysis"
+author: "Aidan Fauth"
+format: html
+editor: visual
+---
+
+## Set up:
+
+```{r}
+rm(list=ls())
+library(tidyverse)
+library(here)
+library(ggfortify)
+library(leaps)
+```
+
+## Load in updated data:
+
+```{r}
+scounts <- read.csv(here("Data", "Fauth_updated_salamander_count.csv"))
+sabund <- read.csv(here("Data", "Fauth_updated_salamander_abundance.csv"))
+```
+
+
+Site_Type
+
+```{r}
+sabund$Site_Type <- as.factor(sabund$Site_Type)
+levels(sabund$Site_Type)
+```
+
+Board_Type
+
+```{r}
+sabund$Board_Type <- as.factor(sabund$Board_Type)
+levels(sabund$Board_Type)
+```
+
+
+Start with model for abundance:
+
+```{r}
+# make a matrix of all the variables:
+sabund_mat <- data.matrix(sabund)
+cor(sabund_mat, sabund$Abundance)
+```
+
+Ignore Richness because it is extremely colinear with Abundance
+
+Week_of_Year is the strongest predictor, followed by Maximum_Temperature fit a preliminary model:
+
+```{r}
+modWYMT <- glm(Abundance~Week_of_Year+Maximum_Temperature, data = sabund)
+summary(modWYMT)
+```
+
+
+stepwise regression:
+
+```{r}
+allmod <- glm(Abundance ~ Week_of_Year + Site_Type + Board_Type + Daily_Precipitation + Maximum_Temperature + Weekly_Precipitation + Year, data = sabund)
+bestmod <- step(allmod)
+summary(bestmod)
+```
+
+Best subsets
+
+```{r}
+library(HH)
+bsubmod <- regsubsets(Abundance ~ Week_of_Year + Site_Type + Board_Type + Daily_Precipitation + Maximum_Temperature + Weekly_Precipitation + Year, data = sabund)
+summaryHH(bsubmod)
+```
+
+Look at model:
+
+```{r}
+modp6 <- glm(Abundance ~ Week_of_Year + Site_Type + Board_Type + Maximum_Temperature + Weekly_Precipitation + Year, data = sabund)
+
+summary(modp6)
+```
+
+```{r}
+lmp6 <- lm(Abundance ~ Week_of_Year + Site_Type + Board_Type + Maximum_Temperature + Weekly_Precipitation + Year, data = sabund)
+summary(lmp6)
+```
+
+```{r}
+vif(modp6)
+```
+
