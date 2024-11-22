@@ -66,5 +66,25 @@ ggplot(fs_count, aes(x = Site_Type, y = total, fill = Species))+
 
 Again, the red backed salamander is the most common, and there were more found in the transitional forest. That is true of the other species as well, but there numbers are so small its hard to see a clear difference, other than the spotted salamander (a clear preference for the transitional forest as well.)
 
-Erika said we would go over how to do the analysis in class ...
+
+## Create Data Frame
+
+I need to group my data by board number and species to conduct the ordination analysis.
+
+I will aslo need the data in wide format.
+
+```{r}
+ord_count <- scount |> group_by(factor(Board_Number),Species, Site_Type) |> summarise(total = sum(Count))
+head(ord_count,12)
+```
+
+```{r}
+wide_df <- ord_count |> pivot_wider(names_from = Species, values_from = total)
+```
+
+Remove NA column:
+
+```{r}
+wide_df <- wide_df |> select(- "NA")
+```
 
