@@ -1,0 +1,152 @@
+---
+title: "Multiple Logistic Regression"
+author: "Aidan Fauth"
+format: html
+editor: visual
+---
+## Introduction
+
+This document is my preliminary data analysis for my multiple logistic regression.
+
+The analysis will assess what variables are the best predictors of salamander occupancy (coded as count in the data set) under coverboards.
+
+## Set up
+
+```{r}
+rm(list = ls())
+library(tidyverse)
+library(here)
+library(ggfortify)
+library(HH) # need for best subsets
+```
+
+
+## Load in the data:
+
+```{r}
+scount <- read.csv(here("Data", "Fauth_updated_salamander_count.csv"))
+glimpse(scount)
+```
+Set variables as factor as needed:
+
+Site_Type
+
+```{r}
+scount$Site_Type <- as.factor(scount$Site_Type)
+levels(scount$Site_Type)
+```
+
+Board_Type
+
+```{r}
+scount$Board_Type <- as.factor(scount$Board_Type)
+levels(scount$Board_Type)
+```
+
+
+## Model Selection
+
+I know that I am doing logistic regression because I have a binary response variable, but I have mix of different predictors that I have to evaluate to see which best explain the variation seen in salamander abundance
+
+Let's look at the correlation of the predictors with Count to see which we expect to see in the model.
+
+This section we will identify the best model out of the given predictors:  
+
+```{r}
+# make a matrix of all the variables:
+scount_mat <- data.matrix(scount)
+cor(scount_mat, scount$Count)
+```
+Ignore X, Species, Board Number, and Date as these will not be used in the analysis.
+
+Week of year ad maximum temperature are both strong predictors, so I expect they will be in the model.
+
+#### Stepwise Regression:
+
+First let's start with stepwise regression, which starts with an empty model and iteratively adds and drops predictors to minimize AIC (a measure of how strong the model is.)
+
+```{r}
+# we need an empty model and full model
+full=glm(Count~Week_of_Year + Site_Type + Board_Type + Daily_Precipitation + Maximum_Temperature + Weekly_Precipitation + Year, family = binomial, data = scount) # use binomial family for logistic
+none=glm(Count~1, family = binomial, data= scount)
+step(none,scope=list(upper=full))
+```
+
+#### Best Subsets
+
+Let's try best subsets, which uses an algorithm to look at the best models for every possible number of predictors (i.e. the best one predictor model, the best two predictor model, and so on.)
+
+```{r}
+bestmod <- regsubsets(Count ~ Week_of_Year + Site_Type + Board_Type + Daily_Precipitation + Maximum_Temperature + Weekly_Precipitation + Year, data = scount)
+summaryHH(bestmod)
+```
+
+Cp is the stand-in for AIC, so we will look to see which has the lowest, which is also the 6 predictor model that was the result of the stepwise regression.
+
+The 7 predictor model had the best $R^2$, but we want a simpler model and $R^2$ doesn't have as much meaning with logistic regression.
+
+However, the 5 predictor model also had a small Cp, so let's compare them.
+
+#### Fit the Models:
+
+```{r}
+mod6 <- glm(Count ~ Week_of_Year + Board_Type + Site_Type + 
+    Maximum_Temperature + Weekly_Precipitation + Year, family = binomial, 
+    data = scount)
+summary(mod6)
+```
+
+Year is not significant and the intercept is not significant. 
+
+Let's see if the 5 predictor model is better.
+
+```{r}
+mod5 <- glm(Count ~ Week_of_Year + Board_Type + Site_Type + Maximum_Temperature + 
+    Weekly_Precipitation, family = binomial, data = scount)
+summary(mod5)
+```
+
+While the Cp is slightly lower, now all the predictors are significant based on each of their individual z-tests for coefficients.
+
+## Check Assumptions
+
+Other than the fact that I know that a binary response requires a logistic regression. I am not aware of the assumptions I should check.
+
+#### Check Multicollinearity
+
+This is important with multiple regression because if predictors are correlated with each other, then their individual z-tests will not be accurate.
+
+VIF: we don't want to see numbers higher than 4
+
+```{r}
+vif(mod5)
+```
+
+Nothing is close to 4, so we can move on.
+
+
+## Interpret the Model
+
+Logistic regression models the odds of either a given salamander being present or not (1 or 0).
+
+The way to interpret if the overall model is to see if there's a significant likelihood ratio test.
+
+With logistic regression the test statistic is "G" which is the difference of the null deviance and the residual deviance.
+
+The test describes how much better the model explains the variance in odds than a constant model (a model with just an intercept)
+
+This statistic is then compared to a chisq distribution with d.f. = # of parameters - 1 = # of predictors
+
+```{r}
+# calculate G using the values in summary()
+G <- summary(mod5)$null.deviance - summary(mod5)$deviance
+G
+# compare to chisq
+1 - pchisq(G,5)
+```
+
+The odds of finding a salamander under a cover board vary with the week of the year, board type, forest type, maximum temperature, and weekly precipitation ($\chi^2_1 = 264.0528$, p << 0.05).
+
+
+
+
