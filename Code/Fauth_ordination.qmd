@@ -66,6 +66,5 @@ ggplot(fs_count, aes(x = Site_Type, y = total, fill = Species))+
 
 Again, the red backed salamander is the most common, and there were more found in the transitional forest. That is true of the other species as well, but there numbers are so small its hard to see a clear difference, other than the spotted salamander (a clear preference for the transitional forest as well.)
 
-
-
+Erika said we would go over how to do the analysis in class ...
 
