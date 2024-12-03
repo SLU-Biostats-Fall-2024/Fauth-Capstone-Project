@@ -1,0 +1,58 @@
+---
+title: "preliminary analysis feedback"
+format: html
+editor: visual
+---
+
+## Preliminary data analysis feedback
+
+### File 1 - `Fauth_abund_multreg.qmd`
+
+Even when you are doing multiple regression, I'd like to see you use the workflow we've been discussing in which you plot and guesstimate results before creating the model (I'm not taking off points, because you did some of this in the data exploration - but it might be good to move that part here so that if you were to go back and look at this in the future, you'd see the plotting of possible relationships here).
+
+What plot or plots might make sense here? (You might think about the results of your line 70 to help decide).
+
+Good choice on glm with count data.
+
+One rule I learned in mutiple regression is that you should look at the correlations among all of the predictor variables and omit one variable from each pair with a correlation coefficient greater than 0.70. I'd like to see this step in your analysis flow before you begin a stepwise or best subsets process. If you run `cor(sabund_mat)` it should give it to you. I ran it, and don't see any issues, but it is a good idea to check in advance of running the models, because both stepwise and best subsets will stuff all the predictors in, regardless of if any are colinear.
+
+I see that you did it using `vif()` on line 127 - I'm interested in why you checked for multicolinearity after model selection rather than before running best subsets or stepwise process?
+
+At line 103 after your stepwise regression, what did you learn? I'd like to seem some commentary there.
+
+Also at line 115 you say both methods give the same model, but I'd like you to be explicit about what that model is and what part of the output tells you the best model.
+
+At line 110, I get an error message that R could not find the function `regsubsets` - looks to me like it is in the `leaps` package? Did you happen to have `leaps` installed when you were running your code? It works when I turn on leaps, but check your set up chunk at the top fo the file to make sure it is turned on.
+
+Really nice job with the likelihood ratio test.
+
+I really like how you stepped through this process - my main complaint is that there is no preliminary plot (or plots) nor do you have any sort of final plot or plots. Think more about how you might depict these results.
+
+One thing to check out might be partial regression plots or added variable plots using `avPlot()` from `car` package.
+
+### File 2 - `Fauth_count_logreg.qmd`
+Line 63 - again, I was expecting to see a big correlation matrix. We can talk about this together, as you likely know more than I do about it.
+
+Line 75 - I'd like to see some commentary about what you learned at the end of your stepwise regression.
+
+Line 81 - Error: could not find function regsubsets - need to make sure leaps is on.
+
+Line 110 - so I think you're choosing the 5 predictor model, correct? Make that more clear.
+
+After you check model performance, you may wish to calculate the odds ratios, which are meaningful because they tell you the odds of detecting a salamander with every unit increase in a particular predictor variable. I have some code for doing it in the CapDAP-Example project in the logistic regression section that you should check out. Once you calculate odds ratios, it would be good to report them in your results statement, as well.
+
+Also take a look in that section about plotting. Again, I'd like to see something more from you in the realm of plotting/guessing what might happen. In multiple regression that looks like a lot of bivariate plots rather than a single plot.
+
+Line 148 - good statement, but now refocus on biology - do those results make good biological sense?
+
+
+
+### File 3 - `Fauth_ordination.qmd`
+Off to a good start here!
+
+Line 85 - if you get an error using `select` it may be because the select function from dplyr is being masked by the select function in the MASS package, so you need to specify which select function you need:
+
+```{r}
+wide_df <- wide_df |> dplyr::select(- "NA")
+```
+

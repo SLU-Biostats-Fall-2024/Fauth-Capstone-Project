@@ -4,10 +4,10 @@ author: "Aidan Fauth"
 format: html
 editor: visual
 ---
+
 ## Introduction
 
-This document will be my preliminary data analysis for one of my questions regarding the salamander data:
-What does the salamander community structure look like in both the transitional and mature forest?
+This document will be my preliminary data analysis for one of my questions regarding the salamander data: What does the salamander community structure look like in both the transitional and mature forest?
 
 To address this question, I will use ordination analysis.
 
@@ -20,7 +20,6 @@ library(here)
 library(ggfortify)
 library(vegan) # needed for ordination
 ```
-
 
 ## Load in the data
 
@@ -45,7 +44,6 @@ scount$Site_Type <- as.factor(scount$Site_Type)
 levels(scount$Site_Type)
 ```
 
-
 ## Plot
 
 To get a sense of the data let's look at a bar graph of the frequencies of each species in each forest.
@@ -65,7 +63,6 @@ ggplot(fs_count, aes(x = Site_Type, y = total, fill = Species))+
 ```
 
 Again, the red backed salamander is the most common, and there were more found in the transitional forest. That is true of the other species as well, but there numbers are so small its hard to see a clear difference, other than the spotted salamander (a clear preference for the transitional forest as well.)
-
 
 ## Create Data Frame
 
@@ -87,4 +84,3 @@ Remove NA column:
 ```{r}
 wide_df <- wide_df |> select(- "NA")
 ```
-
