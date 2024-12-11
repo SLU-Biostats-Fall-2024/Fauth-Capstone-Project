@@ -19,6 +19,9 @@ library(tidyverse)
 library(here)
 library(ggfortify)
 library(vegan) # needed for ordination
+library(ggvegan)
+library(ggpubr)
+library(ggrepel)
 ```
 
 ## Load in the data
@@ -71,7 +74,7 @@ I need to group my data by board number and species to conduct the ordination an
 I will aslo need the data in wide format.
 
 ```{r}
-ord_count <- scount |> group_by(factor(Board_Number),Species, Site_Type) |> summarise(total = sum(Count))
+ord_count <- scount |> group_by(Board_Number,Species, Site_Type) |> summarise(total = sum(Count))
 head(ord_count,12)
 ```
 
@@ -84,3 +87,32 @@ Remove NA column:
 ```{r}
 wide_df <- wide_df |> select(- "NA")
 ```
+<<<<<<< HEAD
+=======
+
+Replace NAs with 0s:
+
+```{r}
+wide_df[is.na(wide_df)] <- 0
+View(wide_df)
+```
+
+
+## Conduct Ordination
+
+```{r}
+SalOrd <- metaMDS(wide_df[,3:7], distance = "bray", k = 2)
+```
+
+Stress and stress plot:
+
+```{r}
+SalOrd$stress
+```
+
+The stress is below 0.2, so 
+
+
+
+
+>>>>>>> 77530b1 (class)
