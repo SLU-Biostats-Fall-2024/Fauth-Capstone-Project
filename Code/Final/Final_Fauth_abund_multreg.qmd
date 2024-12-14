@@ -1,0 +1,168 @@
+---
+title: "Abundace Multiple Regression"
+author: "Aidan Fauth"
+format: html
+editor: visual
+---
+
+## Introduction:
+
+The goal of this document is to do the preliminary data analysis for one of my questions based on the salamander data: what variables best predict salamander abundance?
+
+I use some sort of multiple regression to find the best model that predicts abundance.
+
+## Set up:
+
+```{r}
+rm(list=ls())
+library(tidyverse)
+library(here)
+library(ggfortify)
+library(HH) #lets have some comments on what some of these packages do
+library(car)
+library(AER)
+#do you need library(leaps) here as well for regsubsets?
+```
+
+## Load in updated data:
+
+```{r}
+sabund <- read.csv(here("Data", "Fauth_updated_salamander_abundance.csv"))
+```
+
+Define chr variables that need to be factors:
+
+Site_Type
+
+```{r}
+sabund$Site_Type <- as.factor(sabund$Site_Type)
+levels(sabund$Site_Type)
+```
+
+Board_Type
+
+```{r}
+sabund$Board_Type <- as.factor(sabund$Board_Type)
+levels(sabund$Board_Type)
+```
+
+## Multiple Regression
+
+Since my response variable is discrete counts, I will have to use a GLM because these data will violate the assumptions needed for a linear model.
+
+#### Finding the right family
+
+For counts, normally the best place to start is using a Poisson distribution. However, lets check how the abundance data is distributed to make sure this will be the appriopriate 'family' to use.
+
+```{r}
+ggplot(sabund, aes(Abundance))+
+  geom_histogram()
+```
+
+The data obviously is not normal, and the right-skewness looks like it is appriopriate for a Poisson. Once I fit the model, I will check the assumptions, and if there is too much variance, I might have to use a negative binomial.
+
+## Model Selection
+
+This section we will identify the best model out of the given predictors:
+
+```{r}
+# make a matrix of all the variables:
+sabund_mat <- data.matrix(sabund)
+cor(sabund_mat, sabund$Abundance)
+```
+
+Ignore Richness because it will be extremely colinear with Abundance. Also ignore date as it has been left a chr variable (year and week of year also replace it a bit.) "X" also just numbers the data, so that should not be part of the model either (I included them in the matrix because it was more efficient than creating subsets.)
+
+Out of the available predictors, the best single predictor (based on correlation) is Week_of_Year, so I expect it will definitely be in the model. I also expect that there will need to multiple terms in the model as
+
+Week_of_Year is the strongest predictor:
+
+Let's look at a preliminary model with a week of year as the single predictor:
+
+```{r}
+modWY <- glm(Abundance ~ Week_of_Year, family = poisson, data = sabund)
+summary(modWY)
+anova(modWY, test = "Chisq") # runs a test to see if the model is better than just a constant predictor
+autoplot(modWY)
+```
+
+The normal quantile plot and the residuals versus fits look concerning. However, the zero's are definitely playing a role in this. Potentially, a negative binomial or zero inflated poisson/negative binomial are necessary.
+
+This model is very significant overall ($\chi^2_1 = 171.72$, \$p \< $2.2*10^{-16}$)
+
+However lets move towards a better model, still using a poisson as the family function.
+
+#### stepwise regression:
+
+This model selection method uses AIC to determine the best model. AIC is a statistical measure based on the maximum likelihood function for the model and has a term the discourages additional predictors (over fitting.) The model starts with no predictors and adds them systematically until the AIC no longer decreases from adding or removing a predictor.
+
+```{r}
+full=glm(Abundance~Week_of_Year + Site_Type + Board_Type + Daily_Precipitation + Maximum_Temperature + Weekly_Precipitation + Year, family = poisson, data= sabund)
+none=glm(Abundance~1, family = poisson, data= sabund)
+step(none,scope=list(upper=full))
+```
+
+#### Best subsets
+
+Another model selection method, it has an algorithm that will find the best model for all the possible number of predictors.
+
+```{r}
+# need HH package for this one:
+bestmod <- regsubsets(Abundance ~ Week_of_Year + Site_Type + Board_Type + Daily_Precipitation + Maximum_Temperature + Weekly_Precipitation + Year, data = sabund)
+summaryHH(bestmod)
+```
+
+Both stepwise regression and best subsets agree with the same model. Let's take a look.
+
+#### Fit the model:
+
+```{r}
+mod6 <- glm(Abundance ~ Week_of_Year + Board_Type + Site_Type + 
+    Year + Maximum_Temperature + Weekly_Precipitation, family = poisson, data = sabund)
+```
+
+#### Check for Multicolinearity
+
+```{r}
+vif(mod6)
+```
+
+We don't have any predictors with a VIF \> 4, so there are no issues with multicolinearity (none of the predictors are highly correlated with each other.)
+
+## Checking Assuptions
+
+As I have never done a poisson regression, I don't know what the assumptions are, though I know that one of them is that the mean and the variance should be equal (dispersion test.)
+
+Let's look:
+
+```{r}
+# needed some extra package to run this test:
+dispersiontest(mod6)
+```
+
+Here we see that the ratio is not significantly greater than 1, so a poisson distribution fits the data well.
+
+## Interpret the model:
+
+```{r}
+summary(mod6)
+```
+
+All the individual coefficients are significant, but they are pretty unintelligible at this point because the data has been transformed (using the link function for poisson which is log()) and some of these predictors are binary categorical variables.
+
+Let's look at the effectiveness of the overall model:
+
+Likelihood ratio test:
+
+A test for the effectiveness of the model -- compares how well the model fits the data compared to a model with just a constant (intercept.)
+
+We do this by subtracting the null deviance by the residual deviance and comparing it to a $\chi^2$ distribution with parameters - 1 degrees of freedom.
+
+```{r}
+# get the null and residual deviance from the summary output:
+stat <- summary(mod6)$null.deviance - summary(mod6)$deviance
+stat # check to see if it's reasonable
+1 - pchisq(stat,6)
+```
+
+We found statistically discernible evidence that week of year, cover board type, site type, year, maximum temperature, and weekly precipitation, were all significant predictors of salamander abundance ($\chi^2_1 = 244.222$, p \<\< 0.05). All predictors vary positively with salamander abundance other than year and week of year vary negatively.

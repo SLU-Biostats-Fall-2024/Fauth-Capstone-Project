@@ -1,0 +1,213 @@
+---
+title: "Ordination"
+author: "Aidan Fauth"
+format: html
+editor: visual
+---
+
+## Introduction
+
+This document will be my preliminary data analysis for one of my questions regarding the salamander data: What does the salamander community structure look like in both the transitional and mature forest?
+
+To address this question, I will use ordination analysis.
+
+## Set up
+
+```{r}
+rm(list=ls())
+library(tidyverse)
+library(here)
+library(ggfortify)
+library(vegan) # needed for ordination
+library(ggvegan)
+library(ggpubr)
+library(ggrepel)
+```
+
+## Load in the data
+
+```{r}
+sabund <- read.csv(here("Data", "Fauth_updated_salamander_abundance.csv"))
+scount <- read.csv(here("Data", "Fauth_updated_salamander_count.csv"))
+```
+
+#### Assign needed data types:
+
+Species
+
+```{r}
+scount$Species <- as.factor(scount$Species)
+levels(scount$Species)
+```
+
+Site_Type
+
+```{r}
+scount$Site_Type <- as.factor(scount$Site_Type)
+levels(scount$Site_Type)
+```
+
+## Plot
+
+To get a sense of the data let's look at a bar graph of the frequencies of each species in each forest.
+
+First we need count data to make the plot. Use the sum of the Count variable to get an actual total for each group:
+
+```{r}
+fs_count <- scount |> group_by(Site_Type,Species) |> summarise(total = sum(Count))
+head(fs_count,12)
+```
+
+Clearly the red backs are way more common.
+
+```{r}
+ggplot(fs_count, aes(x = Site_Type, y = total, fill = Species))+
+     geom_bar(stat = "identity", position = "dodge")
+```
+
+Again, the red backed salamander is the most common, and there were more found in the transitional forest. That is true of the other species as well, but there numbers are so small its hard to see a clear difference, other than the spotted salamander (a clear preference for the transitional forest as well.)
+
+## Create Data Frame
+
+I need to group my data by board number and species to conduct the ordination analysis.
+
+I will also need the data in wide format.
+
+```{r}
+ord_count <- scount |> group_by(Board_Number,Species, Site_Type,Board_Type) |> summarise(total = sum(Count))
+head(ord_count,12)
+```
+
+```{r}
+wide_df <- ord_count |> pivot_wider(names_from = Species, values_from = total)
+```
+
+Remove NA column:
+
+```{r}
+wide_df <- wide_df |> select(- "NA")
+```
+
+Replace NAs with 0s:
+
+```{r}
+wide_df[is.na(wide_df)] <- 0
+View(wide_df)
+```
+
+## Conduct Ordination
+
+```{r}
+SalOrd <- metaMDS(wide_df[,4:8], distance = "bray", k = 2)
+```
+
+Stress and stress plot:
+
+```{r}
+SalOrd$stress
+```
+
+The stress is below 0.2, which is acceptable.
+
+```{r}
+stressplot(SalOrd)
+```
+
+The fit is relatively linear, meaning that as the dissimilarity and the ordination distance increase at a roughly constant rate. However, at large dissimilarities the variation increases and the rate of increase becomes less constant (curve), but this is not that surprising.
+
+## Plot Results
+
+Get results into a format in which they can be plotted:
+
+```{r}
+#now put results into a dataframe that ggplot2 can use
+PlotData <- fortify(SalOrd)
+View(PlotData)
+```
+
+Plot:
+
+```{r}
+ggplot()+
+   geom_point(data = subset(PlotData, score =="sites"), 
+              aes(label = label, x = NMDS1, y = NMDS2),
+              color = "red",
+              alpha = 0.5) +
+   geom_segment(data=subset(PlotData, score == "species"),
+                 mapping = aes(x = 0, y = 0, xend = NMDS1, yend=NMDS2),
+                 arrow = arrow(length = unit(0.015, "npc"),
+               type = "closed"),
+                 color = "darkgray",
+                 size = 0.8)+
+   geom_text(data = subset(PlotData, score == "species"),
+             mapping = aes(label = label, x = NMDS1*1.1, y=NMDS2*1.1 ), size = 8/.pt)+ #plots species names on plot
+  geom_text(data = subset(PlotData, score == "sites"),
+             mapping = aes(label = label, x = NMDS1*1.1, y = NMDS2), size = 10/.pt, color = "red")+ #plots
+   geom_abline(intercept = 0, slope = 0, linetype = "dashed", linewidth = 0.8, color = "gray")+
+   geom_vline(aes(xintercept = 0), linetype = "dashed", linewidth = 0.8, color = "gray")+
+   theme(
+      panel.grid.major = element_blank(),
+      panel.grid.minor = element_blank(),
+      panel.background = element_blank(),
+      axis.line = element_line(color = "black")
+   )
+```
+
+See if board type has influence on the clustering of points:
+
+```{r}
+# first lets change the species names back into their full names (instead of the codes)
+PlotData2 <- PlotData
+species_names <- c("E. Red Backed Salamander", "Four Toed Salamander","Spotted Salamander", "E. Red Spotted Newt", "N. Two Lined Salamander")
+
+#variable site_names has shortened combinations of the first two columns of trees_wide.
+
+#now replace the first 15 rows of PlotData2$label with site_names
+PlotData2$label[41:45] <- species_names
+View(PlotData2)
+
+PlotData3 <- PlotData[1:40,] 
+# takes a subset of the dataframe that only contains rows with board numbers (excludes the species rows)
+
+PlotData3$Board_Type <- wide_df$Board_Type 
+# adds board type back as a variable so it can be plotted
+
+PlotData3$Site_Type <- wide_df$Site_Type 
+# adds forest type back as a variable so it an be plotted
+View(PlotData3)
+```
+
+New plot:
+
+```{r}
+ggplot()+
+   geom_point(data = PlotData3, 
+              aes(label = label, x = NMDS1, y = NMDS2, shape = Site_Type),
+              color = "red",
+              alpha = 0.5, position = position_jitter(width = 0.05,height = 0.05), size = 2) +
+   geom_segment(data=subset(PlotData2, score == "species"),
+                 mapping = aes(x = 0, y = 0, xend = NMDS1, yend=NMDS2),
+                 arrow = arrow(length = unit(0.015, "npc"),
+                type = "closed"),
+                 color = "darkgray",
+                 size = 0.8)+
+   geom_text(data = subset(PlotData2, score == "species"),
+             mapping = aes(label = label, x = NMDS1, y=NMDS2,), size = 10/.pt,)+ 
+            #plots species names on plot
+  geom_text(data = PlotData3,
+        mapping = aes(label = label, x = NMDS1*1.1, y = NMDS2, color = Board_Type), size = 10/.pt)+ #board numbers
+        scale_color_manual(values = c("Artificial"="blue", "Natural"="forestgreen"))+
+   geom_abline(intercept = 0, slope = 0, linetype = "dashed", linewidth = 0.8, color = "gray")+
+   geom_vline(aes(xintercept = 0), linetype = "dashed", linewidth = 0.8, color = "gray")+
+  labs(color = "Board Type", shape = "Site Type")+ # change the legend titles
+   theme(
+      panel.grid.major = element_blank(),
+      panel.grid.minor = element_blank(),
+      panel.background = element_blank(),
+      axis.line = element_line(color = "black")
+   )
+
+   
+```
+
+From this graph we can see (again) that the Eastern Red Backed Salamander is by far the most common and many of the cover boards had mostly RB salamanders. Visually it seems the main cluster is characterized by mostly RB salamanders and then perhaps some Two lined salamanders and eastern spotted newts. The other smaller and looser cluster is in between RB salamander and spotted salamander. The least common seems to be Four Toed Salamanders, or at least those cover boards where they were found had more random community structures compared to the other cover boards. As for forest type, there seems to be a preference by FT salamanders and spotted salamanders for transitional forests because the points closest to either one are mostly triangles representing the transitional forest.

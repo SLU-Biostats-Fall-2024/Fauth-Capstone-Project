@@ -31,6 +31,7 @@ I really like how you stepped through this process - my main complaint is that t
 One thing to check out might be partial regression plots or added variable plots using `avPlot()` from `car` package.
 
 ### File 2 - `Fauth_count_logreg.qmd`
+
 Line 63 - again, I was expecting to see a big correlation matrix. We can talk about this together, as you likely know more than I do about it.
 
 Line 75 - I'd like to see some commentary about what you learned at the end of your stepwise regression.
@@ -45,9 +46,8 @@ Also take a look in that section about plotting. Again, I'd like to see somethin
 
 Line 148 - good statement, but now refocus on biology - do those results make good biological sense?
 
-
-
 ### File 3 - `Fauth_ordination.qmd`
+
 Off to a good start here!
 
 Line 85 - if you get an error using `select` it may be because the select function from dplyr is being masked by the select function in the MASS package, so you need to specify which select function you need:
@@ -55,4 +55,3 @@ Line 85 - if you get an error using `select` it may be because the select functi
 ```{r}
 wide_df <- wide_df |> dplyr::select(- "NA")
 ```
-
