@@ -19,6 +19,10 @@ library(tidyverse)
 library(here)
 library(ggfortify)
 library(HH) # need for best subsets
+library(leaps) # need for regsubsets
+library(corrplot) # need for corrplot
+library(oddsratio) # for odds ratios
+library(broom) #for tidying model results
 ```
 
 ## Load in the data:
@@ -52,15 +56,49 @@ Let's look at the correlation of the predictors with Count to see which we expec
 
 This section we will identify the best model out of the given predictors:
 
+First get rid of unwanted predictors:
+
+X, Species, Board Number, and Date will not be used.
+
+```{r}
+drop <- c("X", "Species", "Board_Number", "Date")
+scount <- dplyr::select(scount, -drop) # avoid masking by other packages
+```
+
 ```{r}
 # make a matrix of all the variables:
 scount_mat <- data.matrix(scount)
-cor(scount_mat, scount$Count)
+cor(scount_mat)
 ```
 
-Ignore X, Species, Board Number, and Date as these will not be used in the analysis.
+Correlation plot:
 
-Week of year ad maximum temperature are both strong predictors, so I expect they will be in the model.
+```{r}
+corrplot::corrplot(cor(scount_mat),type = "lower", order = "hclust", tl.col = "black", tl.srt = 45)
+```
+
+Week of year and maximum temperature are both strong predictors, so I expect they will be in the model.
+
+Note that week of year and maximum temperature are relatively highly correlated, so we will have to check the VIF once a model is fit to make sure we avoid multicollinearity.
+
+Let's look at some preliminary plots of the best predictors:
+
+```{r}
+ggplot(scount, aes(x=Week_of_Year, y=Count))+
+  geom_point(position = position_jitter(width = 0.2, height = 0.05))+
+  theme_bw()
+
+ggplot(scount, aes(x=Maximum_Temperature, Count))+
+  geom_point(position = position_jitter(width = 0.2, height = 0.05))+
+  theme_bw()
+```
+
+Week of year: There doesn't seem to much of a logistic trend. Possibly a slightly negative trend where the further on in the year the likelihood of finding a salamander under a cover board decreases because there are slightly fewer points between weeks 44-46 that are coded as 1 (salamander was found.)
+
+Maximum Temperature: There seems to be a slightly positive logistic trend where at lower maximum temperatures, there were fewer salamanders found (fewer points at count = 1.)
+
+
+## Model Selection
 
 #### Stepwise Regression:
 
@@ -73,6 +111,10 @@ none=glm(Count~1, family = binomial, data= scount)
 step(none,scope=list(upper=full))
 ```
 
+The best model according to stepwise regression using AIC as the metric was a six predictor model:
+
+Count ~ Week_of_Year + Board_Type + Site_Type + Maximum_Temperature + Weekly_Precipitation + Year
+
 #### Best Subsets
 
 Let's try best subsets, which uses an algorithm to look at the best models for every possible number of predictors (i.e. the best one predictor model, the best two predictor model, and so on.)
@@ -82,7 +124,7 @@ bestmod <- regsubsets(Count ~ Week_of_Year + Site_Type + Board_Type + Daily_Prec
 summaryHH(bestmod)
 ```
 
-Cp is the stand-in for AIC, so we will look to see which has the lowest, which is also the 6 predictor model that was the result of the stepwise regression.
+Cp is the stand-in for AIC, so we will look to see which has the lowest, which is also the same 6 predictor model that was the result of the stepwise regression.
 
 The 7 predictor model had the best $R^2$, but we want a simpler model and $R^2$ doesn't have as much meaning with logistic regression.
 
@@ -107,7 +149,13 @@ mod5 <- glm(Count ~ Week_of_Year + Board_Type + Site_Type + Maximum_Temperature 
 summary(mod5)
 ```
 
-While the Cp is slightly lower, now all the predictors are significant based on each of their individual z-tests for coefficients.
+While the Cp is slightly higher, now all the predictors are significant based on each of their individual z-tests for coefficients.
+
+I will take this trade-off for a simplier model.
+
+Best model: 
+
+Count ~ Week_of_Year + Board_Type + Site_Type + Maximum_Temperature + Weekly_Precipitation
 
 ## Check Assumptions
 
@@ -145,4 +193,47 @@ G
 1 - pchisq(G,5)
 ```
 
-The odds of finding a salamander under a cover board vary with the week of the year, board type, forest type, maximum temperature, and weekly precipitation ($\chi^2_1 = 264.0528$, p \<\< 0.05).
+Odds ratios:
+
+```{r}
+or_glm(scount, mod5, incr = list(
+    Week_of_Year = 1, 
+    Board_Type = 1, 
+    Site_Type = 1, 
+    Maximum_Temperature = 1,
+    Weekly_Precipitation = 1))
+```
+
+Final Plot:
+
+First get confidence intervals and coefficients into a data frame.
+
+```{r}
+coefs <- tidy(mod5)
+ci <- confint(mod5)
+cidf <- data.frame(cbind(coefs, ci))
+```
+
+Change column names:
+
+```{r}
+cidf <-cidf %>% rename(
+  "lower" = "X2.5..",
+  "upper" = "X97.5.."
+)
+
+cidf$term <- as.factor(cidf$term)
+```
+
+Plot:
+
+```{r}
+ggplot(cidf, aes(estimate, term))+
+  geom_vline(xintercept = 0, linetype = 2)+
+  geom_point(size = 2)+
+  geom_errorbarh(aes(xmax = lower, xmin = upper), height = 0.2)+
+  theme_bw()
+```
+
+
+The odds of finding a salamander under a cover board vary with the week of the year, board type, forest type, maximum temperature, and weekly precipitation ($\chi^2_1 = 264.0528$, p \<\< 0.05). For each increment of a week, the odds of finding a salamander under a cover board increases by 0.814 times, meaning the the odds decrease by 18.6%. This follows the expectations after the initial plot of counts versus week of year, there is a slight decreasing logistic trend, which is reflected in the odds ratio. The odds of finding a salamander increase by 1.912 and 1.490 times if the cover board is natural and the board is in a transitional forest, respectively. The large increase in odds of finding a salamander if the cover board is natural also confirms our initial hypothesis because of the chemicals in artificial board potentially being adverse to salamanders (Moore 2005). As for the transitional forest type, this result goes against our intitial expectations, however, it was never outside the possibility as some species do slightly prefer disturbed forests (Mossman 2019). This would indicate the sample is predominately made of species that prefer those habitats (such as the eastern red backed salamander.) Also, for every degree increased in the maximum temperature, the odds of finding a salamander increase by 3.2%. This effect on odds is small, but positive which follows the initial plot of this predictor on its own. Its small effect could be due to the threshold idea where salamander prescence increases with temperature up until a certain point and then drops off (Sexton 1990). If the weekly precipitation increases by 1, the odds of finding a salamander increase 5.1%. Perhaps this is a smaller effect than expected, but the fact that it is positive aligns with salamanders need of moisture to survive. The plot shows that week of year, forest type (site type transitional forest), and board type (natural) all have significant effects (due to confidence intervals that don't contain zero.) On the other hand, maximum temperature and weekly precipitation either barely significant or are not, which reflects their weak influence described in their odds ratios compared to the other predictors.

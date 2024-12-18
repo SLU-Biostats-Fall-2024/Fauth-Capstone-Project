@@ -1,0 +1,655 @@
+---
+title: "Final Data Analysis & Report"
+author: "Aidan Fauth"
+format: html
+editor: visual
+---
+
+## Set up
+
+```{r}
+rm(list=ls())
+library(tidyverse)
+library(here)
+library(ggfortify)
+library(vegan) # ordination
+library(ggvegan) # ordination
+library(ggpubr) # ordination
+library(ggrepel) # ordination
+library(HH) #best subsets
+library(car)
+library(AER) # dispersion test
+library(leaps) # regsubsets()
+library(corrplot) # correlation plot
+library(broom) #for tidying model results
+```
+
+
+# Introduction
+
+These two data sets (one with the occupancy data and the other with abundance) were collected from the James H. Barrow Biological Field Station (Hiram, Ohio) by Schwendler, Oliphant, Ryman, and Runyon to observe the preference of salamander species of natural vs. artificial coverboards. Coverboards are being used to help conserve salamander species in response to habitat loss and as a sampling method. Data was collected weekly and salamander abundance, species, and species richness were recorded. Environmental conditions were also recorded such as daily and weekly (between the 2nd week of September and the 2nd week of November) precipitation, as well as maximum temperature. Forest type (mature and transitional) was also recorded. These data, collected from 2018 to 2021, are composed of 1560 observations and originally 10 in each data set. During data exploration, I converted the date column into a data object and extracted the year to add as another variable in each data set. I also made sure all there were no errors in the data through plotting and changing the categorical variables to factors. Before data exploration, I cleaned the data which only required eliminating the spaces in the variable names to "\_", which is a better format for R.
+
+Original source of data:
+
+Schwendler, H., L. Oliphant, N. Ryman, and A. Runyon. 2022. Understanding the Influences of Forest Type, Cover Board Type and Weather on Salamanders ver 1. Environmental Data Initiative. https://doi.org/10.6073/pasta/581c8327d2fcda85595d9caa5bc12521 (Accessed 2024-10-22).
+
+# Analysis
+
+
+## Multiple Regression
+
+Objective: Find the best model that predicts the abundance of salamanders under cover boards.
+
+General Hypotheses:
+
+$H_0=\beta_1=\beta_2=...=\beta_k=0$ where k = \# of predictors -- there are no significant predictors
+
+$H_a=$ some $\beta_i\neq0$ -- at least one predictor is significant.
+
+#### Expected Relationship:
+
+I expect to see a strong relationship with precipitation (either daily or weekly) and with maximum temperature because the studies have found an increase in salamander immigration due to precipitation and air temperature above a certain threshold (Sexton et al. 1990). This means that the relationship will be expected to be positive, but the relationship may not be linear due to the ‘threshold’ mechanism causing the data to level off (exponential or logistic shape.) I also assume that the site type (the forest type) and the board type to be significant. I expect the mature forests to be favored as well, due to salamanders preferring limited to no disturbance in their forests (Pough et al. 1987). I expect natural boards to favored and be good predictors of abundance because using the natural wood of highest abundance in each forest was seen to be the best cover board type in a study of red backed salamanders compared to other methods in the literature (Moore 2005). However, as a complete model, some of the predictors that may be significant will not be part of the best model because a lot of the predictors are collinear (correlated to each other.)
+
+
+### Load in updated data:
+
+```{r}
+sabund <- read.csv(here("Data", "Fauth_updated_salamander_abundance.csv"))
+```
+
+Define chr variables that need to be factors:
+
+Site_Type
+
+```{r}
+sabund$Site_Type <- as.factor(sabund$Site_Type)
+levels(sabund$Site_Type)
+```
+
+Board_Type
+
+```{r}
+sabund$Board_Type <- as.factor(sabund$Board_Type)
+levels(sabund$Board_Type)
+```
+
+
+### GLM
+
+Since my response variable is discrete counts, I will have to use a GLM because these data will violate the assumptions needed for a linear model.
+
+#### Finding the right family
+
+For counts, normally the best place to start is using a Poisson distribution. However, lets check how the abundance data is distributed to make sure this will be the appropriate 'family' to use.
+
+```{r}
+ggplot(sabund, aes(Abundance))+
+  geom_histogram()
+```
+
+The data obviously is not normal, and the right-skewness looks like it is appropriate for a Poisson. Once I fit the model, I will check the assumptions, and if there is too much variance, I might have to use a negative binomial.
+
+### Model Selection
+
+This section we will identify the best model out of the given predictors:
+
+```{r}
+# make a matrix of all the variables:
+sabund_mat <- data.matrix(sabund)
+cor(sabund_mat[,2:12]) # don't use the "X" column
+```
+
+Use a corrplot to see these results better:
+
+```{r}
+corrplot::corrplot(cor(sabund_mat[,2:12]),type = "lower", order = "hclust", tl.col = "black", tl.srt = 45)
+```
+
+Ignore Richness because it will be extremely co-linear with Abundance (having abundance also means you know the richness.) Also ignore date as it has been left a chr variable (year and week of year also replace it a bit.) Note that maximum temperature and week of year have a relatively strong correlation, we will see if this becomes a problem once we fit the model. Board number will also not be used, so its correlations can be ignored.
+
+Out of the available predictors, the best single predictor of abundance (based on correlation) is Week_of_Year, so I expect it will definitely be in the model. I also expect that there will need to multiple terms in the model as week of year has a correlation of only \~0.3.
+
+Biologically this makes sense as salamanders are active in breeding season (spring) and then burrow deeper and become inactive once the temperature decreases into fall and winter. Moisture and temperature are huge factors for their activity and whether they would be near the surface to be found under a cover board, and the time of year encompasses some of that environmental variation.
+
+Let's look at some plots of the best predictors:
+
+```{r}
+ggplot(sabund, aes(x = Week_of_Year, y = Abundance))+
+  geom_point(position = position_jitter(width = 0.1, height = 0.1))+
+  theme_bw()
+
+ggplot(sabund, aes(x = Maximum_Temperature, y = Abundance))+
+  geom_point(position = position_jitter(width = 0.1, height = 0.1))+
+  theme_bw()
+```
+
+These predictors seem to have a curved relationship with abundance, where a peak is found at some number and then the abundance drops off again. In the case of week of the year, that peak occurs around week 38 (with the bulk of the density around week 39) and then drops off. For maximum temperature, this occurs later in the range of temperatures -- around 23 C and the bulk of the density around 20 C. This makes sense as salamanders, in general would have a range of temperatures where they would comfortably live and is indicative of the threshold model outlined above (Sexton et al. 1990). Likewise, there must be a time of year where they are the most active and near the surface where they would be found under cover boards.
+
+These predictors seem to have a trend (albeit not linear) that will be useful in the model, but there also seems to be some additional variation to be explained (which will require multiple predictors.)
+
+Let's look at a preliminary model with a week of year as the single predictor:
+
+```{r}
+modWY <- glm(Abundance ~ Week_of_Year, family = "poisson", data = sabund)
+summary(modWY)
+anova(modWY, test = "Chisq") # runs a test to see if the model is better than just a constant predictor
+autoplot(modWY)
+```
+
+The normal quantile plot and the residuals versus fits look concerning. However, the zero's are definitely playing a role in this. Potentially, a negative binomial or zero inflated Poisson/negative binomial are necessary.
+
+This model is very significant overall ($\chi^2_1 = 171.72$, p \< $2.2*10^{-16}$)
+
+However lets move towards a better model, still using a Poisson as the family function.
+
+#### stepwise regression:
+
+This model selection method uses AIC to determine the best model. AIC is a statistical measure based on the maximum likelihood function for the model and has a term the discourages additional predictors (over fitting.) The model starts with no predictors and adds (or drops) them systematically until the AIC no longer decreases from adding or removing a predictor.
+
+```{r}
+full=glm(Abundance~Week_of_Year + Site_Type + Board_Type + Daily_Precipitation + Maximum_Temperature + Weekly_Precipitation + Year, family = "poisson", data= sabund)
+none=glm(Abundance~1, family = "poisson", data= sabund)
+step(none,scope=list(upper=full))
+```
+
+Stepwise stopped at a model that includes week of year, board type, site type, year, maximum temperature, and weekly precipitation. This is a six predictor model, so I would like to see if another method will produce a different model.
+
+#### Best subsets
+
+Another model selection method, it has an algorithm that will find the best model for all the possible number of predictors. It uses many different metrics to measure model strength, but we will focus on Cp, as this is equivalent to AIC (the measure we used for stepwise regression.)
+
+```{r}
+# need HH and leaps package for this one:
+bestmod <- regsubsets(Abundance ~ Week_of_Year + Site_Type + Board_Type + Daily_Precipitation + Maximum_Temperature + Weekly_Precipitation + Year, data = sabund)
+summaryHH(bestmod)
+```
+
+Both stepwise regression and best subsets agree (using Cp or AIC as the determining factor) with the same 6 predictor model of week of year, board type, site type, year, maximum temperature, and weekly precipitation. Let's take a look.
+
+#### Model selected:
+
+Abundance \~ Week_of_Year + Board_Type + Site_Type + Year + Maximum_Temperature + Weekly_Precipitation
+
+#### Fit the model:
+
+```{r}
+mod6 <- glm(Abundance ~ Week_of_Year + Board_Type + Site_Type + 
+    Year + Maximum_Temperature + Weekly_Precipitation, family = "poisson", data = sabund)
+```
+
+#### Check for Multicolinearity
+
+```{r}
+vif(mod6)
+```
+
+We don't have any predictors with a VIF \> 4, so there are no issues with multicolinearity (none of the predictors are highly correlated with each other.)
+
+
+### Checking Assuptions
+
+Before we move on with using a Poisson distribution, we need to check that the mean and the variance are approximately equal (dispersion test.) Otherwise we may need a negative binomial or zero inflated distribution to explain these data.
+
+Let's look:
+
+```{r}
+dispersiontest(mod6)
+```
+
+Here we see that the ratio is not significantly greater than 1, so a Poisson distribution fits the data well.
+
+
+### Interpret the model:
+
+```{r}
+summary(mod6)
+```
+
+All the individual coefficients are significant, but they are pretty unintelligible at this point because the data has been transformed (using the link function for Poisson which is log() and some of these predictors are binary categorical variables.
+
+Let's look at the effectiveness of the overall model:
+
+Likelihood ratio test:
+
+A test for the effectiveness of the model -- compares how well the model fits the data compared to a model with just a constant (intercept.)
+
+Null hypothesis: data are best describe by a constant model
+
+Alternative: some other model (in our case the 6 predictor model) is better at explaining the variance in the data
+
+We do this by subtracting the null deviance by the residual deviance and comparing it to a $\chi^2$ distribution with parameters - 1 degrees of freedom.
+
+```{r}
+# get the null and residual deviance from the summary output:
+stat <- summary(mod6)$null.deviance - summary(mod6)$deviance
+stat # check to see if it's reasonable
+1 - pchisq(stat,6)
+```
+
+We found statistically discernible evidence that week of year, cover board type, site type, year, maximum temperature, and weekly precipitation, were all significant predictors of salamander abundance ($\chi^2_1 = 244.222$, p \<\< 0.05). All predictors vary positively with salamander abundance other than year and week of year vary negatively. Biologically, this makes sense as salamanders require many environmental variables to be optimal for their survival. As stated before, they show a preference for natural cover boards due to the positive coefficient (natural was coded at 1.) However, the transitional forest was favored characterized by its positive coefficient in the model, which went against my general expectations. However, Mossman et al. acknowledges that different species have highly variable responses to forest disturbance and forest characteristics other than age (like undergrowth and downed wood) are better predictors of salamander abundance (2019). As seen in the correlation and preliminary plots, week of year had a negative relationship and maximum temperature had a positive trend. Year had a slight negative trend, and this may be a reflection of amphibian species decreasing world-wide due to human disturbance (contaminants, climate change etc.) Weekly precipitation had a slightly positive relationship, which makes sense for salamander as they need a moist environment.
+
+
+## Multiple Logistic Regression
+
+Objective:
+
+General Hypotheses:
+
+$H_0=\beta_1=\beta_2=...=\beta_k=0$ where k = \# of predictors -- there are no significant predictors
+
+$H_a=$ some $\beta_i\neq0$ -- at least one predictor is significant.
+
+#### Expected Relationship:
+
+The same initial expectations from the
+
+
+### Load in the data:
+
+```{r}
+scount <- read.csv(here("Data", "Fauth_updated_salamander_count.csv"))
+glimpse(scount)
+```
+
+Set variables as factor as needed:
+
+Site_Type
+
+```{r}
+scount$Site_Type <- as.factor(scount$Site_Type)
+levels(scount$Site_Type)
+```
+
+Board_Type
+
+```{r}
+scount$Board_Type <- as.factor(scount$Board_Type)
+levels(scount$Board_Type)
+```
+
+
+### Model Selection
+
+I know that I am doing logistic regression because I have a binary response variable, but I have mix of different predictors that I have to evaluate to see which best explain the variation seen in salamander abundance
+
+Let's look at the correlation of the predictors with Count to see which we expect to see in the model.
+
+This section we will identify the best model out of the given predictors:
+
+First get rid of unwanted predictors:
+
+X, Species, Board Number, and Date will not be used.
+
+```{r}
+drop <- c("X", "Species", "Board_Number", "Date")
+scount <- dplyr::select(scount, -drop) # avoid masking by other packages
+```
+
+```{r}
+# make a matrix of all the variables:
+scount_mat <- data.matrix(scount)
+cor(scount_mat)
+```
+
+Correlation plot:
+
+```{r}
+corrplot::corrplot(cor(scount_mat),type = "lower", order = "hclust", tl.col = "black", tl.srt = 45)
+```
+
+Week of year and maximum temperature are both strong predictors, so I expect they will be in the model.
+
+Note that week of year and maximum temperature are relatively highly correlated, so we will have to check the VIF once a model is fit to make sure we avoid multicollinearity.
+
+Let's look at some preliminary plots of the best predictors:
+
+```{r}
+ggplot(scount, aes(x=Week_of_Year, y=Count))+
+  geom_point(position = position_jitter(width = 0.2, height = 0.05))+
+  theme_bw()
+
+ggplot(scount, aes(x=Maximum_Temperature, Count))+
+  geom_point(position = position_jitter(width = 0.2, height = 0.05))+
+  theme_bw()
+```
+
+Week of year: There doesn't seem to much of a logistic trend. Possibly a slightly negative trend where the further on in the year the likelihood of finding a salamander under a cover board decreases because there are slightly fewer points between weeks 44-46 that are coded as 1 (salamander was found.)
+
+Maximum Temperature: There seems to be a slightly positive logistic trend where at lower maximum temperatures, there were fewer salamanders found (fewer points at count = 1.)
+
+
+### Model Selection Methods
+
+#### Stepwise Regression:
+
+First let's start with stepwise regression, which starts with an empty model and iteratively adds and drops predictors to minimize AIC (a measure of how strong the model is.)
+
+```{r}
+# we need an empty model and full model
+full=glm(Count~Week_of_Year + Site_Type + Board_Type + Daily_Precipitation + Maximum_Temperature + Weekly_Precipitation + Year, family = binomial, data = scount) # use binomial family for logistic
+none=glm(Count~1, family = binomial, data= scount)
+step(none,scope=list(upper=full))
+```
+
+The best model according to stepwise regression using AIC as the metric was a six predictor model:
+
+Count \~ Week_of_Year + Board_Type + Site_Type + Maximum_Temperature + Weekly_Precipitation + Year
+
+#### Best Subsets
+
+Let's try best subsets, which uses an algorithm to look at the best models for every possible number of predictors (i.e. the best one predictor model, the best two predictor model, and so on.)
+
+```{r}
+bestmod <- regsubsets(Count ~ Week_of_Year + Site_Type + Board_Type + Daily_Precipitation + Maximum_Temperature + Weekly_Precipitation + Year, data = scount)
+summaryHH(bestmod)
+```
+
+Cp is the stand-in for AIC, so we will look to see which has the lowest, which is also the same 6 predictor model that was the result of the stepwise regression.
+
+The 7 predictor model had the best $R^2$, but we want a simpler model and $R^2$ doesn't have as much meaning with logistic regression.
+
+However, the 5 predictor model also had a small Cp, so let's compare them.
+
+#### Fit the Models:
+
+```{r}
+mod6 <- glm(Count ~ Week_of_Year + Board_Type + Site_Type + 
+    Maximum_Temperature + Weekly_Precipitation + Year, family = binomial, 
+    data = scount)
+summary(mod6)
+```
+
+Year is not significant and the intercept is not significant.
+
+Let's see if the 5 predictor model is better.
+
+```{r}
+mod5 <- glm(Count ~ Week_of_Year + Board_Type + Site_Type + Maximum_Temperature + 
+    Weekly_Precipitation, family = binomial, data = scount)
+summary(mod5)
+```
+
+While the Cp is slightly higher, now all the predictors are significant based on each of their individual z-tests for coefficients.
+
+I will take this trade-off for a simplier model.
+
+Best model:
+
+Count \~ Week_of_Year + Board_Type + Site_Type + Maximum_Temperature + Weekly_Precipitation
+
+#### Check Multicollinearity
+
+This is important with multiple regression because if predictors are correlated with each other, then their individual z-tests will not be accurate.
+
+VIF: we don't want to see numbers higher than 4
+
+```{r}
+vif(mod5)
+```
+
+Nothing is close to 4, so we can move on.
+
+
+### Interpret the Model
+
+Logistic regression models the odds of either a given salamander being present or not (1 or 0).
+
+The way to interpret if the overall model is to see if there's a significant likelihood ratio test.
+
+With logistic regression the test statistic is "G" which is the difference of the null deviance and the residual deviance.
+
+The test describes how much better the model explains the variance in odds than a constant model (a model with just an intercept)
+
+This statistic is then compared to a chisq distribution with d.f. = \# of parameters - 1 = \# of predictors
+
+```{r}
+# calculate G using the values in summary()
+G <- summary(mod5)$null.deviance - summary(mod5)$deviance
+G
+# compare to chisq
+1 - pchisq(G,5)
+```
+
+Odds ratios:
+
+```{r}
+or_glm(scount, mod5, incr = list(
+    Week_of_Year = 1, 
+    Board_Type = 1, 
+    Site_Type = 1, 
+    Maximum_Temperature = 1,
+    Weekly_Precipitation = 1))
+```
+
+Final Plot:
+
+First get confidence intervals and coefficients into a data frame.
+
+```{r}
+coefs <- tidy(mod5)
+ci <- confint(mod5)
+cidf <- data.frame(cbind(coefs, ci))
+```
+
+Change column names:
+
+```{r}
+cidf <-cidf %>% rename(
+  "lower" = "X2.5..",
+  "upper" = "X97.5.."
+)
+
+cidf$term <- as.factor(cidf$term)
+```
+
+Plot:
+
+```{r}
+ggplot(cidf, aes(estimate, term))+
+  geom_vline(xintercept = 0, linetype = 2)+
+  geom_point(size = 2)+
+  geom_errorbarh(aes(xmax = lower, xmin = upper), height = 0.2)+
+  theme_bw()
+```
+
+The odds of finding a salamander under a cover board vary with the week of the year, board type, forest type, maximum temperature, and weekly precipitation ($\chi^2_1 = 264.0528$, p \<\< 0.05). For each increment of a week, the odds of finding a salamander under a cover board increases by 0.814 times, meaning the the odds decrease by 18.6%. This follows the expectations after the initial plot of counts versus week of year, there is a slight decreasing logistic trend, which is reflected in the odds ratio. The odds of finding a salamander increase by 1.912 and 1.490 times if the cover board is natural and the board is in a transitional forest, respectively. The large increase in odds of finding a salamander if the cover board is natural also confirms our initial hypothesis because of the chemicals in artificial board potentially being adverse to salamanders (Moore 2005). As for the transitional forest type, this result goes against our intitial expectations, however, it was never outside the possibility as some species do slightly prefer disturbed forests (Mossman et al. 2019). This would indicate the sample is predominately made of species that prefer those habitats (such as the eastern red backed salamander.) Also, for every degree increased in the maximum temperature, the odds of finding a salamander increase by 3.2%. This effect on odds is small, but positive which follows the initial plot of this predictor on its own. Its small effect could be due to the threshold idea where salamander prescence increases with temperature up until a certain point and then drops off (Sexton et al. 1990). If the weekly precipitation increases by 1, the odds of finding a salamander increase 5.1%. Perhaps this is a smaller effect than expected, but the fact that it is positive aligns with salamanders need of moisture to survive. The plot shows that week of year, forest type (site type transitional forest), and board type (natural) all have significant effects (due to confidence intervals that don't contain zero.) On the other hand, maximum temperature and weekly precipitation either barely significant or are not, which reflects their weak influence described in their odds ratios compared to the other predictors.
+
+
+## Ordination
+
+Characterize the community structure of the salamanders sampled in these data.
+
+-   Note: there is no real null or alternative hypothesis for this kind of analysis, it is more of an exploratory analysis.
+
+#### Expected Relationship:
+
+I do expect to see a difference in preference in habitat in at least some the species. For instance, in a study of red backed salamanders and spotted newts, the newts remained in the least disturbed oldest forest type (mature forests) while red backed salamander abundance was higher in regenerated forests (regenerated from past cuts) (Mossman et al. 2019). From this I at least can hypothesize that the red backed salamander to prefer the transitional forests, while the spotted newt to prefer the mature forests.
+
+#### Assign needed data types:
+
+Re-load data (original data frame):
+
+```{r}
+scount <- read.csv(here("Data", "Fauth_updated_salamander_count.csv"))
+```
+
+
+Species
+
+```{r}
+scount$Species <- as.factor(scount$Species)
+levels(scount$Species)
+```
+
+Site_Type
+
+```{r}
+scount$Site_Type <- as.factor(scount$Site_Type)
+levels(scount$Site_Type)
+```
+
+
+### Initial Plot
+
+To get a sense of the data let's look at a bar graph of the frequencies of each species in each forest.
+
+First we need count data to make the plot. Use the sum of the Count variable to get an actual total for each group:
+
+```{r}
+fs_count <- scount |> group_by(Site_Type,Species) |> summarise(total = sum(Count))
+head(fs_count,12)
+```
+
+Clearly the red backs are way more common.
+
+```{r}
+ggplot(fs_count, aes(x = Site_Type, y = total, fill = Species))+
+     geom_bar(stat = "identity", position = "dodge")
+```
+
+Again, the red backed salamander is the most common, and there were more found in the transitional forest which agrees with my original expectations. That is true of the other species as well (not necessarily expect), but there numbers are so small its hard to see a clear difference, other than the spotted salamander (a clear preference for the transitional forest as well.) In general however, there doesn't seem to be a significant difference in habitat.
+
+To get a better idea of the variation in salamander presence, let's also include the board number and board type as ways of accounting for local environmental factors when conducting the ordination analysis.
+
+
+### Create Data Frame
+
+I need to group my data by board number and species to conduct the ordination analysis.
+
+This will require the "scount" data frame also used in the logistic multiple regression.
+
+I will also need the data in wide format.
+
+```{r}
+ord_count <- scount |> group_by(Board_Number,Species, Site_Type,Board_Type) |> summarise(total = sum(Count))
+head(ord_count,12)
+```
+
+```{r}
+wide_df <- ord_count |> pivot_wider(names_from = Species, values_from = total)
+```
+
+Remove NA column:
+
+```{r}
+wide_df <- wide_df |> dplyr::select(-"NA")
+```
+
+Replace NAs with 0s:
+
+```{r}
+wide_df[is.na(wide_df)] <- 0
+View(wide_df)
+```
+
+
+### Conduct Ordination
+
+```{r}
+SalOrd <- metaMDS(wide_df[,4:8], distance = "bray", k = 2)
+```
+
+Stress and stress plot:
+
+```{r}
+SalOrd$stress
+```
+
+The stress is below 0.2, which is acceptable.
+
+```{r}
+stressplot(SalOrd)
+```
+
+The fit is relatively linear, meaning that as the dissimilarity and the ordination distance increase at a roughly constant rate. However, at large dissimilarities the variation increases and the rate of increase becomes less constant (curve), but this is not that surprising.
+
+
+### Plot Results
+
+Get results into a format in which they can be plotted:
+
+```{r}
+#now put results into a dataframe that ggplot2 can use
+PlotData <- fortify(SalOrd)
+View(PlotData)
+```
+
+Plot:
+
+See if board type has influence on the clustering of points:
+
+```{r}
+# first lets change the species names back into their full names (instead of the codes)
+PlotData2 <- PlotData
+species_names <- c("E. Red Backed Salamander", "Four Toed Salamander","Spotted Salamander", "E. Red Spotted Newt", "N. Two Lined Salamander")
+
+#variable site_names has shortened combinations of the first two columns of trees_wide.
+
+#now replace the first 15 rows of PlotData2$label with site_names
+PlotData2$label[41:45] <- species_names
+View(PlotData2)
+
+PlotData3 <- PlotData[1:40,] 
+# takes a subset of the dataframe that only contains rows with board numbers (excludes the species rows)
+
+PlotData3$Board_Type <- wide_df$Board_Type 
+# adds board type back as a variable so it can be plotted
+
+PlotData3$Site_Type <- wide_df$Site_Type 
+# adds forest type back as a variable so it an be plotted
+View(PlotData3)
+```
+
+
+### Final plot:
+
+```{r}
+ggplot()+
+   geom_point(data = PlotData3, 
+              aes(label = label, x = NMDS1, y = NMDS2, shape = Site_Type),
+              color = "red",
+              alpha = 0.5, position = position_jitter(width = 0.1,height = 0.1, seed = 100), size = 2) +
+   geom_segment(data=subset(PlotData2, score == "species"),
+              mapping = aes(x = 0, y = 0, xend = NMDS1, yend=NMDS2),
+              arrow = arrow(length = unit(0.015, "npc"),
+              type = "closed"),
+              color = "darkgray",
+              size = 0.8)+
+  geom_text(data = PlotData3,
+        mapping = aes(label = label, x = NMDS1*1.05, y = NMDS2*1.05, color = Board_Type), 
+        position = position_jitter(width = 0.1,height = 0.1, seed = 100), 
+        size = 10/.pt, alpha = 0.75)+ #board numbers
+        scale_color_manual(values = c("Artificial"="blue", "Natural"="forestgreen"))+ #change the colors
+   geom_abline(intercept = 0, slope = 0, linetype = "dashed", linewidth = 0.8, color = "gray")+
+   geom_vline(aes(xintercept = 0), linetype = "dashed", linewidth = 0.8, color = "gray")+
+  geom_text(data = subset(PlotData2, score == "species"),
+             mapping = aes(label = label, x = NMDS1, y=NMDS2), size = 10/.pt,)+
+              #plots species names on plot
+  labs(color = "Board Type", shape = "Site Type")+ # change the legend titles
+   theme(
+      panel.grid.major = element_blank(),
+      panel.grid.minor = element_blank(),
+      panel.background = element_blank(),
+      axis.line = element_line(color = "black")
+   )
+
+   
+```
+
+From this graph we can see (again) that the Eastern Red Backed Salamander (RB) is by far the most common and many of the cover boards had mostly RB salamanders. Visually it seems the main cluster is characterized by mostly RB salamanders and then perhaps some Two Lined Salamanders and Eastern Spotted Newts. The other smaller, looser cluster is in between RB Salamander and Spotted Salamander. The least common seems to be Four Toed Salamanders, or at least those cover boards where they were found had more random community structures compared to the other cover boards. As for forest type, there seems to be a preference by Four Toed Salamanders and Spotted Salamanders for transitional forests because the points closest to either one are mostly triangles representing the transitional forest. This reflects what we saw in the preliminary bar graph of the data, which illustrated higher diversity in the transitional forest. It also reflects what is found in the literature, which states that RB have a preference for slightly disturbed forests (Mossman et al. 2019).
+
+
+# Challenges
+
+Initially, choosing do to three different analyses was challenging because it required more time to code and interpret them. Luckily, I had some exposure both to multiple regression and multiple logistic regression. Due to my prior knowledge, the logistic regression went smoothly, but with the normal multiple regression I encountered a new challenge: count data. Previously, I have never used count data, so I did a deep dive into the appropriate distribution families that would fit my data. I decided a Poisson was the best distribution, but I learned a lot about roles of negative binomial, zero-inflated Poisson, and zero-inflated negative binomial through my research of the topic. In addition, I had to learn ordination, which was a completely new topic to me and was not discussed in class. Through the information provided by Dr. Erika Barthelmess and my own tinkering I now have an introductory knowledge in ordination and graphing the results.
+
+
+# Works Cited:
+
+Pough FH, Smith EM, Rhodes DH, Collazo A. 1987. The abundance of salamanders in forest stands with different histories of disturbance. Forest Ecology and Management. 20(1-2):1–9. doi:https://doi.org/10.1016/0378-1127(87)90146-0.
+
+Moore J-D. 2005. Use of Native Dominant Wood as a New Coverboard Type for Monitoring Eastern Red-backed Salamanders. Herpetological Review. 36(3):268–271. \[accessed 2022 Dec 1\]. https://mffp.gouv.qc.ca/documents/forest/understanding/research/Herpet-review-36-3-268-271.pdf.
+
+Mossman A, Lambert MR, Ashton MS, Wikle J, Duguid MC. 2019. Two salamander species respond differently to timber harvests in a managed New England forest. PeerJ. 7:e7604. doi:https://doi.org/10.7717/peerj.7604.
+
+Sexton OJ, Phillips C, Bramble JE. 1990. The Effects of Temperature and Precipitation on the Breeding Migration of the Spotted Salamander (Ambystoma maculatum). Copeia. 1990(3):781. doi:https://doi.org/10.2307/1446443.

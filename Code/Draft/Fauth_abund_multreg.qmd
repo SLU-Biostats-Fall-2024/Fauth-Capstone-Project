@@ -166,3 +166,12 @@ stat # check to see if it's reasonable
 ```
 
 We found statistically discernible evidence that week of year, cover board type, site type, year, maximum temperature, and weekly precipitation, were all significant predictors of salamander abundance ($\chi^2_1 = 244.222$, p \<\< 0.05). All predictors vary positively with salamander abundance other than year and week of year vary negatively.
+
+Try a final plot:
+
+Final Plot:
+
+```{r}
+library(car)
+avPlots(mod6)
+```

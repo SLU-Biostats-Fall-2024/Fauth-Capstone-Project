@@ -18,10 +18,11 @@ rm(list=ls())
 library(tidyverse)
 library(here)
 library(ggfortify)
-library(HH) #lets have some comments on what some of these packages do
+library(HH) #best subsets
 library(car)
-library(AER)
-#do you need library(leaps) here as well for regsubsets?
+library(AER) # dispersion test
+library(leaps) # regsubsets()
+library(corrplot) # correlation plot
 ```
 
 ## Load in updated data:
@@ -52,14 +53,14 @@ Since my response variable is discrete counts, I will have to use a GLM because 
 
 #### Finding the right family
 
-For counts, normally the best place to start is using a Poisson distribution. However, lets check how the abundance data is distributed to make sure this will be the appriopriate 'family' to use.
+For counts, normally the best place to start is using a Poisson distribution. However, lets check how the abundance data is distributed to make sure this will be the appropriate 'family' to use.
 
 ```{r}
 ggplot(sabund, aes(Abundance))+
   geom_histogram()
 ```
 
-The data obviously is not normal, and the right-skewness looks like it is appriopriate for a Poisson. Once I fit the model, I will check the assumptions, and if there is too much variance, I might have to use a negative binomial.
+The data obviously is not normal, and the right-skewness looks like it is appropriate for a Poisson. Once I fit the model, I will check the assumptions, and if there is too much variance, I might have to use a negative binomial.
 
 ## Model Selection
 
@@ -68,14 +69,34 @@ This section we will identify the best model out of the given predictors:
 ```{r}
 # make a matrix of all the variables:
 sabund_mat <- data.matrix(sabund)
-cor(sabund_mat, sabund$Abundance)
+cor(sabund_mat[,2:12]) # don't use the "X" column
 ```
 
-Ignore Richness because it will be extremely colinear with Abundance. Also ignore date as it has been left a chr variable (year and week of year also replace it a bit.) "X" also just numbers the data, so that should not be part of the model either (I included them in the matrix because it was more efficient than creating subsets.)
+Use a corrplot to see these results better:
 
-Out of the available predictors, the best single predictor (based on correlation) is Week_of_Year, so I expect it will definitely be in the model. I also expect that there will need to multiple terms in the model as
+```{r}
+corrplot::corrplot(cor(sabund_mat[,2:12]),type = "lower", order = "hclust", tl.col = "black", tl.srt = 45)
+```
 
-Week_of_Year is the strongest predictor:
+Ignore Richness because it will be extremely co-linear with Abundance (having abundance also means you know the richness.) Also ignore date as it has been left a chr variable (year and week of year also replace it a bit.) Note that maximum temperature and week of year have a relatively strong correlation, we will see if this becomes a problem once we fit the model. Board number will also not be used, so its correlations can be ignored.
+
+Out of the available predictors, the best single predictor of abundance (based on correlation) is Week_of_Year, so I expect it will definitely be in the model. I also expect that there will need to multiple terms in the model as week of year has a correlation of only \~0.3.
+
+Let's look at some plots of the best predictors:
+
+```{r}
+ggplot(sabund, aes(x = Week_of_Year, y = Abundance))+
+  geom_point(position = position_jitter(width = 0.1, height = 0.1))+
+  theme_bw()
+
+ggplot(sabund, aes(x = Maximum_Temperature, y = Abundance))+
+  geom_point(position = position_jitter(width = 0.1, height = 0.1))+
+  theme_bw()
+```
+
+These predictors seem to have a curved relationship with abundance, where a peak is found at some number and then the abundance drops off again. In the case of week of the year, that peak occurs around week 38 (with the bulk of the density around week 39) and then drops off. For maximum temperature, this occurs later in the range of temperatures -- around 23 C and the bulk of the density around 20 C. This makes sense as salamanders, in general would have a range of temperatures where they would comfortably live and is indicative of the threshold model outlined above (Sexton et al. 1990). Likewise, there must be a time of year where they are the most active and near the surface where they would be found under cover boards.
+
+These predictors seem to have a trend (albeit not linear) that will be useful in the model, but there also seems to be some additional variation to be explained (which will require multiple predictors.)
 
 Let's look at a preliminary model with a week of year as the single predictor:
 
@@ -94,7 +115,7 @@ However lets move towards a better model, still using a poisson as the family fu
 
 #### stepwise regression:
 
-This model selection method uses AIC to determine the best model. AIC is a statistical measure based on the maximum likelihood function for the model and has a term the discourages additional predictors (over fitting.) The model starts with no predictors and adds them systematically until the AIC no longer decreases from adding or removing a predictor.
+This model selection method uses AIC to determine the best model. AIC is a statistical measure based on the maximum likelihood function for the model and has a term the discourages additional predictors (over fitting.) The model starts with no predictors and adds (or drops) them systematically until the AIC no longer decreases from adding or removing a predictor.
 
 ```{r}
 full=glm(Abundance~Week_of_Year + Site_Type + Board_Type + Daily_Precipitation + Maximum_Temperature + Weekly_Precipitation + Year, family = poisson, data= sabund)
@@ -102,17 +123,23 @@ none=glm(Abundance~1, family = poisson, data= sabund)
 step(none,scope=list(upper=full))
 ```
 
+Stepwise stopped at a model that includes week of year, board type, site type, year, maximum temperature, and weekly precipitation. This is a six predictor model, so I would like to see if another method will produce a different model.
+
 #### Best subsets
 
-Another model selection method, it has an algorithm that will find the best model for all the possible number of predictors.
+Another model selection method, it has an algorithm that will find the best model for all the possible number of predictors. It uses many different metrics to measure model strength, but we will focus on Cp, as this is equivalent to AIC (the measure we used for stepwise regression.)
 
 ```{r}
-# need HH package for this one:
+# need HH and leaps package for this one:
 bestmod <- regsubsets(Abundance ~ Week_of_Year + Site_Type + Board_Type + Daily_Precipitation + Maximum_Temperature + Weekly_Precipitation + Year, data = sabund)
 summaryHH(bestmod)
 ```
 
-Both stepwise regression and best subsets agree with the same model. Let's take a look.
+Both stepwise regression and best subsets agree (using Cp or AIC as the determining factor) with the same 6 predictor model of week of year, board type, site type, year, maximum temperature, and weekly precipitation. Let's take a look.
+
+#### Model selected:
+
+Abundance ~ Week_of_Year + Board_Type + Site_Type + Year + Maximum_Temperature + Weekly_Precipitation
 
 #### Fit the model:
 
@@ -131,12 +158,11 @@ We don't have any predictors with a VIF \> 4, so there are no issues with multic
 
 ## Checking Assuptions
 
-As I have never done a poisson regression, I don't know what the assumptions are, though I know that one of them is that the mean and the variance should be equal (dispersion test.)
+Before we move on with using a poisson distribution, we need to check that the mean and the variance are approximately equal (dispersion test.) Otherwise we may need a negative binomial or zero inflated distribution to explain these data.
 
 Let's look:
 
 ```{r}
-# needed some extra package to run this test:
 dispersiontest(mod6)
 ```
 
@@ -148,13 +174,17 @@ Here we see that the ratio is not significantly greater than 1, so a poisson dis
 summary(mod6)
 ```
 
-All the individual coefficients are significant, but they are pretty unintelligible at this point because the data has been transformed (using the link function for poisson which is log()) and some of these predictors are binary categorical variables.
+All the individual coefficients are significant, but they are pretty unintelligible at this point because the data has been transformed (using the link function for poisson which is log() and some of these predictors are binary categorical variables.
 
 Let's look at the effectiveness of the overall model:
 
 Likelihood ratio test:
 
 A test for the effectiveness of the model -- compares how well the model fits the data compared to a model with just a constant (intercept.)
+
+Null hypothesis: data are best describe by a constant model
+
+Alternative: some other model (in our case the 6 predictor model) is better at explaining the variance in the data
 
 We do this by subtracting the null deviance by the residual deviance and comparing it to a $\chi^2$ distribution with parameters - 1 degrees of freedom.
 
@@ -165,4 +195,4 @@ stat # check to see if it's reasonable
 1 - pchisq(stat,6)
 ```
 
-We found statistically discernible evidence that week of year, cover board type, site type, year, maximum temperature, and weekly precipitation, were all significant predictors of salamander abundance ($\chi^2_1 = 244.222$, p \<\< 0.05). All predictors vary positively with salamander abundance other than year and week of year vary negatively.
+We found statistically discernible evidence that week of year, cover board type, site type, year, maximum temperature, and weekly precipitation, were all significant predictors of salamander abundance ($\chi^2_1 = 244.222$, p \<\< 0.05). All predictors vary positively with salamander abundance other than year and week of year vary negatively. Biologically, this makes sense as salamanders require many environmental variables to be optimal for their survival. As stated before, they show a preference for natural cover boards due to the positive coefficient (natural was coded at 1.) However, the transitional forest was favored due to its positive coefficient in the model, which went against my expectations. However, Mossman acknowledges that different species have highly variable responses to forest disturbance and forest characteristics other than age (like undergrowth and downed wood) are better predictors of salamander abundance (2019). As seen in the correlation and preliminary plots, week of year had a negative relationship and maximum temperature had a positive trend. Year had a slight negative trend, and this may be a reflection of amphibian species decreasing world-wide due to human disturbance (contaminants, climate change etc.) Weekly precipitation had a slightly positive relationship, which makes sense for salamander as they need a moist environment.
