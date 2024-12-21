@@ -24,7 +24,6 @@ library(corrplot) # correlation plot
 library(broom) #for tidying model results
 ```
 
-
 # Introduction
 
 These two data sets (one with the occupancy data and the other with abundance) were collected from the James H. Barrow Biological Field Station (Hiram, Ohio) by Schwendler, Oliphant, Ryman, and Runyon to observe the preference of salamander species of natural vs. artificial coverboards. Coverboards are being used to help conserve salamander species in response to habitat loss and as a sampling method. Data was collected weekly and salamander abundance, species, and species richness were recorded. Environmental conditions were also recorded such as daily and weekly (between the 2nd week of September and the 2nd week of November) precipitation, as well as maximum temperature. Forest type (mature and transitional) was also recorded. These data, collected from 2018 to 2021, are composed of 1560 observations and originally 10 in each data set. During data exploration, I converted the date column into a data object and extracted the year to add as another variable in each data set. I also made sure all there were no errors in the data through plotting and changing the categorical variables to factors. Before data exploration, I cleaned the data which only required eliminating the spaces in the variable names to "\_", which is a better format for R.
@@ -34,7 +33,6 @@ Original source of data:
 Schwendler, H., L. Oliphant, N. Ryman, and A. Runyon. 2022. Understanding the Influences of Forest Type, Cover Board Type and Weather on Salamanders ver 1. Environmental Data Initiative. https://doi.org/10.6073/pasta/581c8327d2fcda85595d9caa5bc12521 (Accessed 2024-10-22).
 
 # Analysis
-
 
 ## Multiple Regression
 
@@ -49,7 +47,6 @@ $H_a=$ some $\beta_i\neq0$ -- at least one predictor is significant.
 #### Expected Relationship:
 
 I expect to see a strong relationship with precipitation (either daily or weekly) and with maximum temperature because the studies have found an increase in salamander immigration due to precipitation and air temperature above a certain threshold (Sexton et al. 1990). This means that the relationship will be expected to be positive, but the relationship may not be linear due to the ‘threshold’ mechanism causing the data to level off (exponential or logistic shape.) I also assume that the site type (the forest type) and the board type to be significant. I expect the mature forests to be favored as well, due to salamanders preferring limited to no disturbance in their forests (Pough et al. 1987). I expect natural boards to favored and be good predictors of abundance because using the natural wood of highest abundance in each forest was seen to be the best cover board type in a study of red backed salamanders compared to other methods in the literature (Moore 2005). However, as a complete model, some of the predictors that may be significant will not be part of the best model because a lot of the predictors are collinear (correlated to each other.)
-
 
 ### Load in updated data:
 
@@ -72,7 +69,6 @@ Board_Type
 sabund$Board_Type <- as.factor(sabund$Board_Type)
 levels(sabund$Board_Type)
 ```
-
 
 ### GLM
 
@@ -185,7 +181,6 @@ vif(mod6)
 
 We don't have any predictors with a VIF \> 4, so there are no issues with multicolinearity (none of the predictors are highly correlated with each other.)
 
-
 ### Checking Assuptions
 
 Before we move on with using a Poisson distribution, we need to check that the mean and the variance are approximately equal (dispersion test.) Otherwise we may need a negative binomial or zero inflated distribution to explain these data.
@@ -197,7 +192,6 @@ dispersiontest(mod6)
 ```
 
 Here we see that the ratio is not significantly greater than 1, so a Poisson distribution fits the data well.
-
 
 ### Interpret the model:
 
@@ -228,7 +222,6 @@ stat # check to see if it's reasonable
 
 We found statistically discernible evidence that week of year, cover board type, site type, year, maximum temperature, and weekly precipitation, were all significant predictors of salamander abundance ($\chi^2_1 = 244.222$, p \<\< 0.05). All predictors vary positively with salamander abundance other than year and week of year vary negatively. Biologically, this makes sense as salamanders require many environmental variables to be optimal for their survival. As stated before, they show a preference for natural cover boards due to the positive coefficient (natural was coded at 1.) However, the transitional forest was favored characterized by its positive coefficient in the model, which went against my general expectations. However, Mossman et al. acknowledges that different species have highly variable responses to forest disturbance and forest characteristics other than age (like undergrowth and downed wood) are better predictors of salamander abundance (2019). As seen in the correlation and preliminary plots, week of year had a negative relationship and maximum temperature had a positive trend. Year had a slight negative trend, and this may be a reflection of amphibian species decreasing world-wide due to human disturbance (contaminants, climate change etc.) Weekly precipitation had a slightly positive relationship, which makes sense for salamander as they need a moist environment.
 
-
 ## Multiple Logistic Regression
 
 Objective:
@@ -242,7 +235,6 @@ $H_a=$ some $\beta_i\neq0$ -- at least one predictor is significant.
 #### Expected Relationship:
 
 The same initial expectations from the
-
 
 ### Load in the data:
 
@@ -266,7 +258,6 @@ Board_Type
 scount$Board_Type <- as.factor(scount$Board_Type)
 levels(scount$Board_Type)
 ```
-
 
 ### Model Selection
 
@@ -316,7 +307,6 @@ ggplot(scount, aes(x=Maximum_Temperature, Count))+
 Week of year: There doesn't seem to much of a logistic trend. Possibly a slightly negative trend where the further on in the year the likelihood of finding a salamander under a cover board decreases because there are slightly fewer points between weeks 44-46 that are coded as 1 (salamander was found.)
 
 Maximum Temperature: There seems to be a slightly positive logistic trend where at lower maximum temperatures, there were fewer salamanders found (fewer points at count = 1.)
-
 
 ### Model Selection Methods
 
@@ -389,7 +379,6 @@ vif(mod5)
 
 Nothing is close to 4, so we can move on.
 
-
 ### Interpret the Model
 
 Logistic regression models the odds of either a given salamander being present or not (1 or 0).
@@ -454,7 +443,6 @@ ggplot(cidf, aes(estimate, term))+
 
 The odds of finding a salamander under a cover board vary with the week of the year, board type, forest type, maximum temperature, and weekly precipitation ($\chi^2_1 = 264.0528$, p \<\< 0.05). For each increment of a week, the odds of finding a salamander under a cover board increases by 0.814 times, meaning the the odds decrease by 18.6%. This follows the expectations after the initial plot of counts versus week of year, there is a slight decreasing logistic trend, which is reflected in the odds ratio. The odds of finding a salamander increase by 1.912 and 1.490 times if the cover board is natural and the board is in a transitional forest, respectively. The large increase in odds of finding a salamander if the cover board is natural also confirms our initial hypothesis because of the chemicals in artificial board potentially being adverse to salamanders (Moore 2005). As for the transitional forest type, this result goes against our intitial expectations, however, it was never outside the possibility as some species do slightly prefer disturbed forests (Mossman et al. 2019). This would indicate the sample is predominately made of species that prefer those habitats (such as the eastern red backed salamander.) Also, for every degree increased in the maximum temperature, the odds of finding a salamander increase by 3.2%. This effect on odds is small, but positive which follows the initial plot of this predictor on its own. Its small effect could be due to the threshold idea where salamander prescence increases with temperature up until a certain point and then drops off (Sexton et al. 1990). If the weekly precipitation increases by 1, the odds of finding a salamander increase 5.1%. Perhaps this is a smaller effect than expected, but the fact that it is positive aligns with salamanders need of moisture to survive. The plot shows that week of year, forest type (site type transitional forest), and board type (natural) all have significant effects (due to confidence intervals that don't contain zero.) On the other hand, maximum temperature and weekly precipitation either barely significant or are not, which reflects their weak influence described in their odds ratios compared to the other predictors.
 
-
 ## Ordination
 
 Characterize the community structure of the salamanders sampled in these data.
@@ -473,7 +461,6 @@ Re-load data (original data frame):
 scount <- read.csv(here("Data", "Fauth_updated_salamander_count.csv"))
 ```
 
-
 Species
 
 ```{r}
@@ -487,7 +474,6 @@ Site_Type
 scount$Site_Type <- as.factor(scount$Site_Type)
 levels(scount$Site_Type)
 ```
-
 
 ### Initial Plot
 
@@ -510,7 +496,6 @@ ggplot(fs_count, aes(x = Site_Type, y = total, fill = Species))+
 Again, the red backed salamander is the most common, and there were more found in the transitional forest which agrees with my original expectations. That is true of the other species as well (not necessarily expect), but there numbers are so small its hard to see a clear difference, other than the spotted salamander (a clear preference for the transitional forest as well.) In general however, there doesn't seem to be a significant difference in habitat.
 
 To get a better idea of the variation in salamander presence, let's also include the board number and board type as ways of accounting for local environmental factors when conducting the ordination analysis.
-
 
 ### Create Data Frame
 
@@ -542,7 +527,6 @@ wide_df[is.na(wide_df)] <- 0
 View(wide_df)
 ```
 
-
 ### Conduct Ordination
 
 ```{r}
@@ -562,7 +546,6 @@ stressplot(SalOrd)
 ```
 
 The fit is relatively linear, meaning that as the dissimilarity and the ordination distance increase at a roughly constant rate. However, at large dissimilarities the variation increases and the rate of increase becomes less constant (curve), but this is not that surprising.
-
 
 ### Plot Results
 
@@ -599,7 +582,6 @@ PlotData3$Site_Type <- wide_df$Site_Type
 # adds forest type back as a variable so it an be plotted
 View(PlotData3)
 ```
-
 
 ### Final plot:
 
@@ -638,11 +620,9 @@ ggplot()+
 
 From this graph we can see (again) that the Eastern Red Backed Salamander (RB) is by far the most common and many of the cover boards had mostly RB salamanders. Visually it seems the main cluster is characterized by mostly RB salamanders and then perhaps some Two Lined Salamanders and Eastern Spotted Newts. The other smaller, looser cluster is in between RB Salamander and Spotted Salamander. The least common seems to be Four Toed Salamanders, or at least those cover boards where they were found had more random community structures compared to the other cover boards. As for forest type, there seems to be a preference by Four Toed Salamanders and Spotted Salamanders for transitional forests because the points closest to either one are mostly triangles representing the transitional forest. This reflects what we saw in the preliminary bar graph of the data, which illustrated higher diversity in the transitional forest. It also reflects what is found in the literature, which states that RB have a preference for slightly disturbed forests (Mossman et al. 2019).
 
-
 # Challenges
 
 Initially, choosing do to three different analyses was challenging because it required more time to code and interpret them. Luckily, I had some exposure both to multiple regression and multiple logistic regression. Due to my prior knowledge, the logistic regression went smoothly, but with the normal multiple regression I encountered a new challenge: count data. Previously, I have never used count data, so I did a deep dive into the appropriate distribution families that would fit my data. I decided a Poisson was the best distribution, but I learned a lot about roles of negative binomial, zero-inflated Poisson, and zero-inflated negative binomial through my research of the topic. In addition, I had to learn ordination, which was a completely new topic to me and was not discussed in class. Through the information provided by Dr. Erika Barthelmess and my own tinkering I now have an introductory knowledge in ordination and graphing the results.
-
 
 # Works Cited:
 
